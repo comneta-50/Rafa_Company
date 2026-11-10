@@ -1,13 +1,20 @@
 /**
  * API Client for Rafa Company Platform Backend (Cloudflare Workers)
+ *
+ * Menggunakan Next.js API Route Proxy (/api/worker/...) saat di browser
+ * sehingga tidak mengekspos environment variable dan aman dari isu CORS.
  */
 
-import { Config } from "./config";
-
-export const WORKER_API_BASE_URL = Config.workerApiUrl;
-
 async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${WORKER_API_BASE_URL}${endpoint}`;
+  const isBrowser = typeof window !== "undefined";
+  const proxyEndpoint = endpoint.startsWith("/api/")
+    ? `/api/worker/${endpoint.replace("/api/", "")}`
+    : `/api/worker${endpoint}`;
+
+  const url = isBrowser
+    ? proxyEndpoint
+    : `https://rafa-backend-worker.rafa-ai.workers.dev${endpoint}`;
+
   const res = await fetch(url, {
     ...options,
     headers: {
@@ -25,16 +32,17 @@ async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T>
 
 export const workerApi = {
   // Metrics
-  getMetrics: () => fetchJson<{
-    activeAgents: number;
-    totalJobs: number;
-    runningJobs: number;
-    completedJobs: number;
-    pendingReviews: number;
-    totalOrders: number;
-    clusterHealth: string;
-    latency: string;
-  }>("/api/metrics"),
+  getMetrics: () =>
+    fetchJson<{
+      activeAgents: number;
+      totalJobs: number;
+      runningJobs: number;
+      completedJobs: number;
+      pendingReviews: number;
+      totalOrders: number;
+      clusterHealth: string;
+      latency: string;
+    }>("/api/metrics"),
 
   // Jobs
   getJobs: () => fetchJson<any[]>("/api/jobs"),
