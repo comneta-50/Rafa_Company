@@ -3,26 +3,27 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-[10px] border border-transparent font-medium whitespace-nowrap transition-all duration-150 outline-none select-none focus-visible:ring-2 focus-visible:ring-[#DC2626]/40 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-[10px] border border-transparent font-medium whitespace-nowrap transition-all duration-150 outline-none select-none focus-visible:ring-2 focus-visible:ring-[#881337]/40 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-[#DC2626] text-white hover:bg-[#B91C1C] shadow-xs",
+        default: "bg-[#881337] text-white hover:bg-[#5B0E23] shadow-xs",
         secondary:
-          "bg-white text-[#18181B] border-[#E4E4E7] hover:bg-[#FAFAFA] shadow-2xs",
+          "bg-white text-[#1C1917] border-[#E7E5E4] hover:bg-[#FAF9F9] hover:border-[#D6D3D1] shadow-2xs",
         outline:
-          "border-[#E4E4E7] bg-transparent text-[#18181B] hover:bg-[#F4F4F5] hover:border-[#D4D4D8]",
+          "border-[#E7E5E4] bg-transparent text-[#1C1917] hover:bg-[#F5F5F6] hover:border-[#D6D3D1]",
         ghost:
-          "bg-transparent text-[#71717A] hover:bg-[#F4F4F5] hover:text-[#18181B]",
+          "bg-transparent text-[#78716C] hover:bg-[#F5F5F6] hover:text-[#1C1917]",
         destructive:
-          "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100",
+          "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100",
       },
       size: {
-        default: "h-[38px] gap-2 px-4 text-[13px]",
-        sm: "h-[32px] gap-1.5 px-3 text-xs",
-        lg: "h-[44px] gap-2 px-5 text-sm",
-        icon: "size-[38px]",
-        "icon-sm": "size-[32px]",
+        /* Padding diperluas untuk ergonomi tombol yang lebih nyaman */
+        default: "h-[40px] gap-2.5 px-5 text-[13px]",
+        sm: "h-[34px] gap-2 px-3.5 text-xs",
+        lg: "h-[46px] gap-3 px-6 text-sm font-semibold",
+        icon: "size-[40px]",
+        "icon-sm": "size-[34px]",
       },
     },
     defaultVariants: {
