@@ -33,15 +33,13 @@ interface CreateOrderModalProps {
 }
 
 export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateOrderModalProps) {
-  const [jobTitle, setJobTitle] = useState("Fix React Login Authentication");
-  const [platform, setPlatform] = useState("Upwork");
-  const [contractType, setContractType] = useState("Fixed Price");
+  const [jobTitle, setJobTitle] = useState("");
+  const [platform, setPlatform] = useState("");
+  const [contractType, setContractType] = useState("");
   const [clientRef, setClientRef] = useState("");
-  const [feeAmount, setFeeAmount] = useState("$250.00");
-  const [bugDescription, setBugDescription] = useState(
-    "Login button does not work. API returns 401 error and users cannot access the dashboard."
-  );
-  const [repoUrl, setRepoUrl] = useState("https://github.com/client/project");
+  const [feeAmount, setFeeAmount] = useState("");
+  const [bugDescription, setBugDescription] = useState("");
+  const [repoUrl, setRepoUrl] = useState("");
   const [expectedResult, setExpectedResult] = useState("");
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
 

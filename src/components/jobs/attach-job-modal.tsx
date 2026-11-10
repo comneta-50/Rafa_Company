@@ -50,8 +50,8 @@ export function AttachJobModal({
   agents,
   onAttached,
 }: AttachJobModalProps) {
-  const [selectedOrderId, setSelectedOrderId] = useState(orders[0]?.id || "");
-  const [selectedAgentName, setSelectedAgentName] = useState(agents[0]?.name || "");
+  const [selectedOrderId, setSelectedOrderId] = useState("");
+  const [selectedAgentName, setSelectedAgentName] = useState("");
 
   const handleAttachSubmit = (e: React.FormEvent) => {
     e.preventDefault();
