@@ -14,7 +14,10 @@ import {
   ChevronDown,
   BarChart3,
   ShoppingCart,
+  LogOut,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,6 +42,8 @@ export const mockAgents: any[] = [];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; role: string } | null>(null);
   const [isAgentsOpen, setIsAgentsOpen] = useState(true);
   const [agents, setAgents] = useState<any[]>([]);
   const [counts, setCounts] = useState({
@@ -47,6 +52,24 @@ export function Sidebar() {
     reviews: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("auth_user");
+      if (stored) {
+        setCurrentUser(JSON.parse(stored));
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("auth_user");
+    toast.success("Berhasil keluar.");
+    router.replace("/login");
+  };
 
   useEffect(() => {
     setIsLoading(true);
@@ -326,18 +349,28 @@ export function Sidebar() {
         </div>
 
         <div className="flex items-center justify-between px-1.5">
-          <div className="flex items-center gap-2.5">
-            <Avatar className="size-8 rounded-[6px] border border-[#E7E5E4]">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Avatar className="size-8 rounded-[6px] border border-[#E7E5E4] shrink-0">
               <AvatarFallback className="rounded-[6px] bg-[#F5F5F6] text-xs font-semibold text-[#1C1917]">
-                RC
+                {currentUser?.name ? currentUser.name.slice(0, 2).toUpperCase() : "RC"}
               </AvatarFallback>
             </Avatar>
-            <div className="flex flex-col text-left">
-              <span className="text-xs font-medium text-[#1C1917]">Smurfish</span>
-              <span className="text-[11px] text-[#78716C]">Admin</span>
+            <div className="flex flex-col text-left truncate">
+              <span className="text-xs font-medium text-[#1C1917] truncate">
+                {currentUser?.name || "Smurfish"}
+              </span>
+              <span className="text-[11px] text-[#78716C] capitalize truncate">
+                {currentUser?.role || "Admin"}
+              </span>
             </div>
           </div>
-          <div className="size-2 rounded-full bg-[#881337]" title="System operational" />
+          <button
+            onClick={handleLogout}
+            title="Keluar / Logout"
+            className="p-1.5 text-[#A8A29E] hover:text-[#881337] hover:bg-[#F5F5F6] rounded-[6px] transition-colors"
+          >
+            <LogOut className="size-4" />
+          </button>
         </div>
       </div>
     </aside>
