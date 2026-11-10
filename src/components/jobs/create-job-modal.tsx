@@ -65,9 +65,9 @@ export function CreateJobModal({ open, onOpenChange, onJobCreated }: CreateJobMo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl rounded-[8px] p-0 bg-white border border-[#E7E5E4] overflow-hidden shadow-xl max-h-[90vh] flex flex-col">
+      <DialogContent className="w-[92vw] max-w-4xl rounded-[10px] p-0 bg-white border border-[#E7E5E4] overflow-hidden shadow-2xl max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-[#E7E5E4] bg-[#FAF9F9]">
+        <div className="px-7 py-5 border-b border-[#E7E5E4] bg-[#FAF9F9]">
           <DialogTitle className="text-lg font-semibold tracking-tight text-[#1C1917]">
             Create New Job
           </DialogTitle>
@@ -77,7 +77,7 @@ export function CreateJobModal({ open, onOpenChange, onJobCreated }: CreateJobMo
         </div>
 
         {/* Scrollable Form Body */}
-        <form onSubmit={handleSubmit} className="overflow-y-auto p-6 space-y-4 text-xs">
+        <form onSubmit={handleSubmit} className="overflow-y-auto p-7 space-y-5 text-xs">
           {/* Job Title */}
           <div>
             <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
@@ -87,13 +87,13 @@ export function CreateJobModal({ open, onOpenChange, onJobCreated }: CreateJobMo
               value={jobTitle}
               onChange={(e) => setJobTitle(e.target.value)}
               placeholder="e.g. Fix React Login Authentication"
-              className="bg-[#FAF9F9] h-9.5 text-xs rounded-[6px]"
+              className="bg-[#FAF9F9] h-10 text-xs rounded-[6px]"
               required
             />
           </div>
 
           {/* Platform & Contract Type Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
               <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
                 Platform
@@ -102,7 +102,7 @@ export function CreateJobModal({ open, onOpenChange, onJobCreated }: CreateJobMo
                 <select
                   value={platform}
                   onChange={(e) => setPlatform(e.target.value)}
-                  className="w-full h-9.5 px-3.5 pr-8 appearance-none rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] text-xs text-[#1C1917] focus:outline-none focus:ring-2 focus:ring-[#881337]/30"
+                  className="w-full h-10 px-3.5 pr-8 appearance-none rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] text-xs text-[#1C1917] focus:outline-none focus:ring-2 focus:ring-[#881337]/30"
                 >
                   <option value="Upwork">Upwork</option>
                   <option value="Fiverr">Fiverr</option>
@@ -122,7 +122,7 @@ export function CreateJobModal({ open, onOpenChange, onJobCreated }: CreateJobMo
                 <select
                   value={contractType}
                   onChange={(e) => setContractType(e.target.value)}
-                  className="w-full h-9.5 px-3.5 pr-8 appearance-none rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] text-xs text-[#1C1917] focus:outline-none focus:ring-2 focus:ring-[#881337]/30"
+                  className="w-full h-10 px-3.5 pr-8 appearance-none rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] text-xs text-[#1C1917] focus:outline-none focus:ring-2 focus:ring-[#881337]/30"
                 >
                   <option value="Fixed Price">Fixed Price</option>
                   <option value="Hourly">Hourly</option>
@@ -134,17 +134,32 @@ export function CreateJobModal({ open, onOpenChange, onJobCreated }: CreateJobMo
             </div>
           </div>
 
-          {/* Client Name / Reference */}
-          <div>
-            <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
-              Client Name / Reference
-            </label>
-            <Input
-              value={clientRef}
-              onChange={(e) => setClientRef(e.target.value)}
-              placeholder="Client username or internal reference"
-              className="bg-[#FAF9F9] h-9.5 text-xs rounded-[6px]"
-            />
+          {/* Client Name / Reference & Repository URL Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+                Client Name / Reference
+              </label>
+              <Input
+                value={clientRef}
+                onChange={(e) => setClientRef(e.target.value)}
+                placeholder="Client username or internal reference"
+                className="bg-[#FAF9F9] h-10 text-xs rounded-[6px]"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+                Repository URL
+              </label>
+              <Input
+                value={repoUrl}
+                onChange={(e) => setRepoUrl(e.target.value)}
+                placeholder="https://github.com/client/project"
+                className="bg-[#FAF9F9] h-10 text-xs rounded-[6px] font-mono"
+                required
+              />
+            </div>
           </div>
 
           {/* Bug Description */}
@@ -156,21 +171,7 @@ export function CreateJobModal({ open, onOpenChange, onJobCreated }: CreateJobMo
               value={bugDescription}
               onChange={(e) => setBugDescription(e.target.value)}
               placeholder="Deskripsikan gejala error, kode HTTP, atau kendala..."
-              className="min-h-[85px] leading-relaxed resize-y"
-              required
-            />
-          </div>
-
-          {/* Repository URL */}
-          <div>
-            <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
-              Repository URL
-            </label>
-            <Input
-              value={repoUrl}
-              onChange={(e) => setRepoUrl(e.target.value)}
-              placeholder="https://github.com/client/project"
-              className="bg-[#FAF9F9] h-9.5 text-xs rounded-[6px] font-mono"
+              className="min-h-[90px] leading-relaxed resize-y"
               required
             />
           </div>
@@ -184,7 +185,7 @@ export function CreateJobModal({ open, onOpenChange, onJobCreated }: CreateJobMo
               value={expectedResult}
               onChange={(e) => setExpectedResult(e.target.value)}
               placeholder="Describe what the client expects..."
-              className="min-h-[75px] leading-relaxed resize-y"
+              className="min-h-[80px] leading-relaxed resize-y"
             />
           </div>
 
@@ -195,9 +196,9 @@ export function CreateJobModal({ open, onOpenChange, onJobCreated }: CreateJobMo
             </label>
             <div
               onClick={handleSimulateUpload}
-              className="border-2 border-dashed border-[#E7E5E4] hover:border-[#881337]/50 rounded-[8px] bg-[#FAF9F9] hover:bg-rose-50/20 transition-all p-5 text-center cursor-pointer flex flex-col items-center justify-center space-y-1.5"
+              className="border-2 border-dashed border-[#E7E5E4] hover:border-[#881337]/50 rounded-[8px] bg-[#FAF9F9] hover:bg-rose-50/20 transition-all p-6 text-center cursor-pointer flex flex-col items-center justify-center space-y-1.5"
             >
-              <div className="size-8 rounded-full bg-white border border-[#E7E5E4] flex items-center justify-center shadow-2xs">
+              <div className="size-9 rounded-full bg-white border border-[#E7E5E4] flex items-center justify-center shadow-2xs">
                 <UploadCloud className="size-4 text-[#881337]" />
               </div>
               <span className="text-xs font-semibold text-[#1C1917]">
