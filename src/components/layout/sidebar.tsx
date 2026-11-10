@@ -15,6 +15,7 @@ import {
   BarChart3,
   ShoppingCart,
   LogOut,
+  Workflow,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -39,7 +40,32 @@ export interface NavCategory {
   items: NavItem[];
 }
 
-export const mockAgents: any[] = [];
+export const mockAgents = [
+  {
+    name: "AI Code Reviewer",
+    role: "Static analysis & AST audit",
+    status: "Online",
+    activeJobs: 3,
+    efficiency: "99.4%",
+    avatar: "CR",
+  },
+  {
+    name: "AutoFix Engineer",
+    role: "Automated patch generation",
+    status: "Busy",
+    activeJobs: 5,
+    efficiency: "96.8%",
+    avatar: "AF",
+  },
+  {
+    name: "Test Runner Bot",
+    role: "End-to-End & regression suite",
+    status: "Online",
+    activeJobs: 1,
+    efficiency: "99.9%",
+    avatar: "TR",
+  },
+];
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -154,6 +180,7 @@ export function Sidebar() {
       category: "AI & Execution",
       items: [
         { id: "agents", label: "AI Agents", href: "/agents", icon: Bot, isDropdown: true },
+        { id: "workflows", label: "Workflows", href: "/workflows", icon: Workflow, badge: "Presets" },
         {
           id: "jobs",
           label: "Jobs",
