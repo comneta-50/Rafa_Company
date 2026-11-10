@@ -1,90 +1,68 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Activity,
   CheckCircle2,
   AlertTriangle,
   Info,
   Clock,
-  Terminal,
-  Cpu,
-  ChevronDown,
-  Download,
+  Inbox,
+  FolderGit2,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { workerApi } from "@/lib/api";
 import { toast } from "sonner";
 
-const mockLogs = [
-  {
-    id: "LOG-9821",
-    timestamp: "19:34:12",
-    level: "success",
-    agent: "AI Code Reviewer",
-    repo: "comneta-50/site-ai-company",
-    message: "Completed AST traversal and validated zero memory leak vectors on auth middleware.",
-    duration: "1.2s",
-  },
-  {
-    id: "LOG-9820",
-    timestamp: "19:33:04",
-    level: "info",
-    agent: "AutoFix Engineer",
-    repo: "comneta-50/site-ai-company",
-    message: "Generated patch diff for token expiration synchronization #PR-104.",
-    duration: "4.8s",
-  },
-  {
-    id: "LOG-9819",
-    timestamp: "19:30:45",
-    level: "warn",
-    agent: "Test Runner Bot",
-    repo: "comneta-50/core-api-service",
-    message: "High latency detected on Redis cluster test container (spike to 184ms).",
-    duration: "12.4s",
-  },
-  {
-    id: "LOG-9818",
-    timestamp: "19:28:11",
-    level: "info",
-    agent: "AI Code Reviewer",
-    repo: "comneta-50/web-frontend",
-    message: "Analyzing pull request #89: hydration mismatch detection on SSR root.",
-    duration: "2.1s",
-  },
-  {
-    id: "LOG-9817",
-    timestamp: "19:25:00",
-    level: "success",
-    agent: "AutoFix Engineer",
-    repo: "comneta-50/analytics-worker",
-    message: "Applied batch buffer backpressure patch and verified green test suite.",
-    duration: "3.7s",
-  },
-  {
-    id: "LOG-9816",
-    timestamp: "19:20:19",
-    level: "info",
-    agent: "Security Guard",
-    repo: "comneta-50/core-api-service",
-    message: "Completed vulnerability audit against CVE database. Zero vulnerabilities found.",
-    duration: "8.5s",
-  },
-];
+export interface LogItem {
+  id: string;
+  timestamp: string;
+  level: "success" | "info" | "warn" | "failed";
+  agent: string;
+  repo: string;
+  message: string;
+  duration?: string;
+}
 
 export default function ActivityPage() {
   const [selectedFilter, setSelectedFilter] = useState("all");
+  const [logs, setLogs] = useState<LogItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredLogs = mockLogs.filter((log) => {
-    if (selectedFilter === "all") return true;
-    return log.level === selectedFilter;
-  });
+  useEffect(() => {
+    setIsLoading(true);
+    workerApi
+      .getActivity(selectedFilter)
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setLogs(data);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to fetch activity logs:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [selectedFilter]);
 
   const handleExport = () => {
-    toast.success("Berhasil mengekspor 6 records telemetry ke format JSON/CSV.");
+    if (logs.length === 0) {
+      toast.info("Belum ada log yang dapat diekspor.");
+      return;
+    }
+    const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `activity-logs-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Berhasil mengekspor ${logs.length} records telemetry ke JSON.`);
   };
 
   return (
@@ -105,32 +83,30 @@ export default function ActivityPage() {
             <Button
               variant={selectedFilter === "all" ? "default" : "outline"}
               size="sm"
-              onClick={() => {
-                setSelectedFilter("all");
-                toast.info("Menampilkan semua aktivitas event");
-              }}
+              onClick={() => setSelectedFilter("all")}
             >
               All Events
             </Button>
             <Button
               variant={selectedFilter === "success" ? "default" : "outline"}
               size="sm"
-              onClick={() => {
-                setSelectedFilter("success");
-                toast.info("Filter: Menampilkan status sukses");
-              }}
+              onClick={() => setSelectedFilter("success")}
             >
               Success
             </Button>
             <Button
               variant={selectedFilter === "warn" ? "default" : "outline"}
               size="sm"
-              onClick={() => {
-                setSelectedFilter("warn");
-                toast.info("Filter: Menampilkan peringatan / warnings");
-              }}
+              onClick={() => setSelectedFilter("warn")}
             >
               Warnings
+            </Button>
+            <Button
+              variant={selectedFilter === "info" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedFilter("info")}
+            >
+              Info
             </Button>
           </div>
         </div>
@@ -142,43 +118,83 @@ export default function ActivityPage() {
               <CardTitle>System & Agent Telemetry</CardTitle>
               <CardDescription>Live streaming log stream from connected agent workers</CardDescription>
             </div>
-            <Badge variant="secondary" className="font-mono">
-              {filteredLogs.length} Records
-            </Badge>
+            {isLoading ? (
+              <Skeleton className="h-5 w-24 rounded-full" />
+            ) : (
+              <Badge variant="secondary" className="font-mono">
+                {logs.length} Records
+              </Badge>
+            )}
           </CardHeader>
           <CardContent className="space-y-2.5 pt-2">
-            {filteredLogs.map((log) => (
-              <div
-                key={log.id}
-                className="p-3.5 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] hover:bg-white hover:border-[#D6D3D1] transition-all flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"
-              >
-                <div className="flex items-start md:items-center gap-3 flex-1 min-w-0">
-                  {log.level === "success" ? (
-                    <CheckCircle2 className="size-4 text-emerald-600 shrink-0 mt-0.5 md:mt-0" />
-                  ) : log.level === "warn" ? (
-                    <AlertTriangle className="size-4 text-amber-600 shrink-0 mt-0.5 md:mt-0" />
-                  ) : (
-                    <Info className="size-4 text-rose-700 shrink-0 mt-0.5 md:mt-0" />
-                  )}
-
-                  <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 flex-1 min-w-0">
-                    <span className="font-mono text-[11px] text-[#78716C] shrink-0">
-                      [{log.timestamp}]
-                    </span>
-                    <span className="font-semibold text-[#881337] shrink-0">
-                      {log.agent}
-                    </span>
-                    <span className="text-[#1C1917] truncate">{log.message}</span>
+            {isLoading ? (
+              // Shimmer Skeleton Loading Rows
+              [1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="p-3.5 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <Skeleton className="size-4 rounded-full shrink-0" />
+                    <Skeleton className="h-4 w-20 shrink-0 font-mono" />
+                    <Skeleton className="h-4 w-32 shrink-0" />
+                    <Skeleton className="h-4 w-2/5" />
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Skeleton className="h-3.5 w-32" />
+                    <Skeleton className="h-3.5 w-12" />
                   </div>
                 </div>
-
-                <div className="flex items-center gap-3 shrink-0 text-[#78716C] font-mono text-[11px] self-end md:self-auto">
-                  <span>{log.repo}</span>
-                  <span>•</span>
-                  <span>{log.duration}</span>
+              ))
+            ) : logs.length === 0 ? (
+              // Empty State
+              <div className="py-16 px-4 text-center rounded-[6px] bg-[#FAF9F9] border border-dashed border-[#E7E5E4] space-y-2">
+                <div className="size-10 rounded-full bg-white border border-[#E7E5E4] flex items-center justify-center mx-auto text-[#78716C] shadow-2xs">
+                  <Inbox className="size-5" />
                 </div>
+                <h3 className="text-sm font-semibold text-[#1C1917]">Belum ada activity logs</h3>
+                <p className="text-xs text-[#78716C] max-w-sm mx-auto">
+                  Log aktivitas akan otomatis terekam setiap kali AI agent menjalankan task, order dibuat, atau pipeline di-trigger.
+                </p>
               </div>
-            ))}
+            ) : (
+              logs.map((log) => (
+                <div
+                  key={log.id}
+                  className="p-3.5 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] hover:bg-white hover:border-[#D6D3D1] transition-all flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"
+                >
+                  <div className="flex items-start md:items-center gap-3 flex-1 min-w-0">
+                    {log.level === "success" ? (
+                      <CheckCircle2 className="size-4 text-emerald-600 shrink-0 mt-0.5 md:mt-0" />
+                    ) : log.level === "warn" ? (
+                      <AlertTriangle className="size-4 text-amber-600 shrink-0 mt-0.5 md:mt-0" />
+                    ) : (
+                      <Info className="size-4 text-rose-700 shrink-0 mt-0.5 md:mt-0" />
+                    )}
+
+                    <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 flex-1 min-w-0">
+                      <span className="font-mono text-[11px] text-[#78716C] shrink-0">
+                        [{log.timestamp}]
+                      </span>
+                      <span className="font-semibold text-[#881337] shrink-0">
+                        {log.agent}
+                      </span>
+                      <span className="text-[#1C1917] truncate">{log.message}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0 text-[#78716C] font-mono text-[11px] self-end md:self-auto">
+                    <span>{log.repo}</span>
+                    {log.duration && (
+                      <>
+                        <span>•</span>
+                        <span>{log.duration}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       </div>
