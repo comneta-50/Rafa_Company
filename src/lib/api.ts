@@ -52,6 +52,40 @@ export const workerApi = {
       pendingReviewsCount: number;
     }>("/api/dashboard"),
 
+  // Authentication
+  login: (credentials: { email: string; password: string }) =>
+    fetchJson<{
+      success: boolean;
+      message: string;
+      user: {
+        id: string;
+        email: string;
+        name: string;
+        role: string;
+        avatar: string;
+      };
+      token: string;
+    }>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    }),
+  register: (userData: { name: string; email: string; password: string }) =>
+    fetchJson<{
+      success: boolean;
+      message: string;
+      user: {
+        id: string;
+        email: string;
+        name: string;
+        role: string;
+        avatar: string;
+      };
+      token: string;
+    }>("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify(userData),
+    }),
+
   // Analytics
   getAnalytics: (timeRange = "7d") =>
     fetchJson<{
