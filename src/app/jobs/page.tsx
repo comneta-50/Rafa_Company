@@ -527,41 +527,127 @@ export default function JobsPage() {
       {/* Modal Dialog Log Output */}
       <Dialog open={!!logModalJob} onOpenChange={(open) => !open && setLogModalJob(null)}>
         {logModalJob && (
-          <DialogContent className="max-w-lg rounded-[8px] p-6 bg-white border border-[#E7E5E4]">
-            <DialogHeader>
-              <DialogTitle className="text-base font-semibold text-[#1C1917]">
-                Live Terminal Logs: {logModalJob.id}
-              </DialogTitle>
-              <DialogDescription className="text-xs text-[#78716C]">
-                Output eksekusi container worker untuk {logModalJob.repo}
+          <DialogContent className="max-w-2xl rounded-[10px] p-6 bg-white border border-[#E7E5E4] shadow-2xl">
+            <DialogHeader className="border-b border-[#E7E5E4] pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="p-1 rounded bg-[#FFE4E6] text-[#881337]">
+                    <Terminal className="size-4" />
+                  </span>
+                  <DialogTitle className="text-base font-semibold text-[#1C1917]">
+                    Live Execution Telemetry: {logModalJob.id}
+                  </DialogTitle>
+                </div>
+                <Badge
+                  variant={
+                    logModalJob.status === "completed"
+                      ? "completed"
+                      : logModalJob.status === "failed"
+                      ? "failed"
+                      : "fixing"
+                  }
+                  className="capitalize font-mono text-[11px]"
+                >
+                  {logModalJob.statusLabel || logModalJob.status} ({logModalJob.progress}%)
+                </Badge>
+              </div>
+              <DialogDescription className="text-xs text-[#78716C] mt-1">
+                Repository: <span className="font-mono text-[#1C1917] font-semibold">{logModalJob.repo}</span> • Agent:{" "}
+                <span className="font-semibold text-[#881337]">{logModalJob.agent}</span>
               </DialogDescription>
             </DialogHeader>
 
-            <div className="p-4 bg-[#1C1917] text-white font-mono text-xs rounded-[6px] space-y-1.5 max-h-60 overflow-y-auto">
-              {logModalJob.logs && logModalJob.logs.length > 0 ? (
-                logModalJob.logs.map((line, idx) => (
-                  <div key={idx} className="flex gap-2">
-                    <span className="text-[#78716C] select-none">{idx + 1}</span>
-                    <span className={idx === (logModalJob.logs?.length || 1) - 1 ? "text-emerald-400" : "text-stone-300"}>
-                      {line}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <div className="text-stone-400 py-3 text-center">
-                  Tidak ada output logs yang tersimpan untuk job ini.
-                </div>
-              )}
+            {/* Quick Metadata Bar */}
+            <div className="grid grid-cols-3 gap-2.5 my-1 text-xs">
+              <div className="p-2.5 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4]">
+                <span className="text-[10px] text-[#78716C] uppercase font-semibold block">Tugas</span>
+                <span className="font-medium text-[#1C1917] line-clamp-1">{logModalJob.title}</span>
+              </div>
+              <div className="p-2.5 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4]">
+                <span className="text-[10px] text-[#78716C] uppercase font-semibold block">Target Branch</span>
+                <span className="font-mono text-[#1C1917]">{logModalJob.branch || "main"}</span>
+              </div>
+              <div className="p-2.5 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4]">
+                <span className="text-[10px] text-[#78716C] uppercase font-semibold block">Progress</span>
+                <span className="font-mono font-semibold text-emerald-700">{logModalJob.progress}%</span>
+              </div>
             </div>
 
-            <DialogFooter className="pt-3 flex justify-end">
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => setLogModalJob(null)}
-              >
-                Selesai
-              </Button>
+            {/* Terminal Window with Enhanced Detail */}
+            <div className="rounded-[8px] overflow-hidden border border-stone-800 bg-[#0C0A09] text-stone-200 font-mono text-xs shadow-inner">
+              <div className="flex items-center justify-between px-3.5 py-2 bg-[#1C1917] border-b border-stone-800 text-[11px] text-stone-400">
+                <div className="flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-rose-500/80" />
+                  <span className="size-2 rounded-full bg-amber-500/80" />
+                  <span className="size-2 rounded-full bg-emerald-500/80" />
+                  <span className="ml-2 font-mono text-stone-300">container://worker-ai-sandbox/{logModalJob.id.toLowerCase()}</span>
+                </div>
+                <span className="text-[10px] font-mono text-stone-500">Cloudflare Edge Sandbox</span>
+              </div>
+
+              <div className="p-4 space-y-2 max-h-72 overflow-y-auto scrollbar-thin">
+                {logModalJob.logs && logModalJob.logs.length > 0 ? (
+                  logModalJob.logs.map((line, idx) => {
+                    const isAiThought = line.startsWith("AI Thought") || line.startsWith("AI Diagnostic");
+                    const isLast = idx === (logModalJob.logs?.length || 1) - 1;
+
+                    return (
+                      <div
+                        key={idx}
+                        className={`flex items-start gap-2.5 py-0.5 ${
+                          isAiThought ? "p-2 rounded bg-[#881337]/15 border border-[#881337]/30 my-1" : ""
+                        }`}
+                      >
+                        <span className="text-stone-600 select-none text-[10px] pt-0.5 w-5 text-right shrink-0">
+                          {idx + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          {isAiThought ? (
+                            <div>
+                              <span className="inline-block px-1.5 py-0.2 rounded bg-[#881337] text-white text-[9px] font-bold uppercase tracking-wider mr-1.5">
+                                Workers AI Inference
+                              </span>
+                              <span className="text-rose-200 font-sans text-xs leading-relaxed">
+                                {line}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className={isLast ? "text-emerald-400 font-semibold" : "text-stone-300"}>
+                              {line}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-stone-500 py-6 text-center text-xs">
+                    Tidak ada log output yang tercatat untuk job ini.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter className="pt-2 flex justify-between items-center sm:justify-between border-t border-[#E7E5E4]">
+              <span className="text-[11px] text-[#78716C] font-mono">
+                Total Steps: {logModalJob.logs?.length || 0} events
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleRetryJob(logModalJob.id)}
+                >
+                  <RotateCw className="size-3 mr-1" /> Trigger Ulang
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => setLogModalJob(null)}
+                >
+                  Tutup Logs
+                </Button>
+              </div>
             </DialogFooter>
           </DialogContent>
         )}

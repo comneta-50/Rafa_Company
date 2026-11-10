@@ -147,6 +147,7 @@ export const workerApi = {
   // Jobs
   getJobs: (status?: string) =>
     fetchJson<any[]>(`/api/jobs${status && status !== "all" ? `?status=${status}` : ""}`),
+  getJobById: (id: string) => fetchJson<any>(`/api/jobs/${id}`),
   createJob: (jobData: { title: string; repo?: string; agent?: string; orderId?: string }) =>
     fetchJson<{ success: boolean; job: any }>("/api/jobs", {
       method: "POST",
