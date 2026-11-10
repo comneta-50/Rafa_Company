@@ -133,6 +133,13 @@ export const workerApi = {
       totalOrders: number;
       clusterHealth: string;
       latency: string;
+      neurons?: {
+        limit: number;
+        used: number;
+        remaining: number;
+        percentage: number;
+        formattedRemaining: string;
+      };
     }>("/api/metrics"),
 
   // Jobs

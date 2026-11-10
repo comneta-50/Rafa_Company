@@ -51,6 +51,13 @@ export function Sidebar() {
     jobs: 0,
     reviews: 0,
   });
+  const [neuronsInfo, setNeuronsInfo] = useState<{
+    remaining: string;
+    percentage: number;
+  }>({
+    remaining: "100.000",
+    percentage: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -79,14 +86,21 @@ export function Sidebar() {
       workerApi.getOrders().catch(() => []),
       workerApi.getJobs().catch(() => []),
       workerApi.getReviews().catch(() => []),
+      workerApi.getMetrics().catch(() => null),
     ])
-      .then(([agentsData, ordersData, jobsData, reviewsData]) => {
+      .then(([agentsData, ordersData, jobsData, reviewsData, metricsData]) => {
         if (Array.isArray(agentsData)) setAgents(agentsData);
         setCounts({
           orders: Array.isArray(ordersData) ? ordersData.length : 0,
           jobs: Array.isArray(jobsData) ? jobsData.length : 0,
           reviews: Array.isArray(reviewsData) ? reviewsData.length : 0,
         });
+        if (metricsData && metricsData.neurons) {
+          setNeuronsInfo({
+            remaining: metricsData.neurons.formattedRemaining,
+            percentage: metricsData.neurons.percentage,
+          });
+        }
       })
       .finally(() => {
         setIsLoading(false);
@@ -341,10 +355,21 @@ export function Sidebar() {
         <div className="rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] p-3 text-xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[#78716C] font-medium">Neurons Quota</span>
-            <span className="text-[#881337] font-mono font-medium">84,200</span>
+            {isLoading ? (
+              <Skeleton className="h-4 w-14" />
+            ) : (
+              <span className="text-[#881337] font-mono font-medium">{neuronsInfo.remaining}</span>
+            )}
           </div>
           <div className="w-full bg-[#E7E5E4] rounded-full h-1.5 overflow-hidden">
-            <div className="bg-[#881337] h-full rounded-full" style={{ width: "68%" }} />
+            {isLoading ? (
+              <Skeleton className="h-full w-full" />
+            ) : (
+              <div
+                className="bg-[#881337] h-full rounded-full transition-all duration-500"
+                style={{ width: `${Math.max(5, neuronsInfo.percentage)}%` }}
+              />
+            )}
           </div>
         </div>
 
