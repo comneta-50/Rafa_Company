@@ -43,31 +43,39 @@
 }
 
 :root {
-  /* Clean SaaS Palette: #111827 (Dark Navy), #2563EB (Royal Blue), #1E40AF (Deep Blue), #F3F4F6, #FFFFFF */
-  --background: #111827;
-  --surface: #1E293B;
-  --surface-hover: #263346;
-  --foreground: #FFFFFF;
-  --muted: #1F2937;
-  --muted-foreground: #94A3B8;
-  --border: #2E384D;
-  --input: #2E384D;
+  /* Clean SaaS Light Palette:
+     Main BG: #F3F4F6 (Cool light grey)
+     Surface/Cards: #FFFFFF
+     Main Text: #111827 (Deep dark navy)
+     Muted Text: #6B7280
+     Borders: #E5E7EB
+     Primary: #2563EB (Royal Blue)
+     Primary Hover: #1E40AF
+  */
+  --background: #F3F4F6;
+  --surface: #FFFFFF;
+  --surface-hover: #F9FAFB;
+  --foreground: #111827;
+  --muted: #F3F4F6;
+  --muted-foreground: #6B7280;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
   --ring: #2563EB;
 
-  --card: #1E293B;
-  --card-foreground: #FFFFFF;
-  --popover: #1E293B;
-  --popover-foreground: #FFFFFF;
+  --card: #FFFFFF;
+  --card-foreground: #111827;
+  --popover: #FFFFFF;
+  --popover-foreground: #111827;
 
   --primary: #2563EB;
   --primary-foreground: #FFFFFF;
-  --primary-hover: #1D4ED8;
-  --primary-soft: #1E40AF;
+  --primary-hover: #1E40AF;
+  --primary-soft: #DBEAFE;
 
-  --secondary: #1F2937;
-  --secondary-foreground: #F3F4F6;
-  --accent: #263346;
-  --accent-foreground: #FFFFFF;
+  --secondary: #F3F4F6;
+  --secondary-foreground: #111827;
+  --accent: #F9FAFB;
+  --accent-foreground: #111827;
   --destructive: #EF4444;
 
   --radius-sm: 6px;
@@ -76,34 +84,6 @@
   --radius-xl: 16px;
   --radius-2xl: 18px;
   --radius: 10px;
-}
-
-.dark {
-  --background: #111827;
-  --surface: #1E293B;
-  --surface-hover: #263346;
-  --foreground: #FFFFFF;
-  --muted: #1F2937;
-  --muted-foreground: #94A3B8;
-  --border: #2E384D;
-  --input: #2E384D;
-  --ring: #2563EB;
-
-  --card: #1E293B;
-  --card-foreground: #FFFFFF;
-  --popover: #1E293B;
-  --popover-foreground: #FFFFFF;
-
-  --primary: #2563EB;
-  --primary-foreground: #FFFFFF;
-  --primary-hover: #1D4ED8;
-  --primary-soft: #1E40AF;
-
-  --secondary: #1F2937;
-  --secondary-foreground: #F3F4F6;
-  --accent: #263346;
-  --accent-foreground: #FFFFFF;
-  --destructive: #EF4444;
 }
 
 @layer base {

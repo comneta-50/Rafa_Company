@@ -11,7 +11,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col overflow-hidden rounded-[14px] bg-[#1E293B] border border-[#2E384D] text-white transition-colors duration-150 hover:border-[#3B4761]",
+        "group/card flex flex-col overflow-hidden rounded-[14px] bg-white border border-[#E5E7EB] text-[#111827] shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-150 hover:border-[#D1D5DB] hover:shadow-[0_2px_6px_rgba(0,0,0,0.06)]",
         className
       )}
       {...props}
@@ -33,7 +33,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
-      className={cn("text-sm font-semibold tracking-tight text-white", className)}
+      className={cn("text-sm font-semibold tracking-tight text-[#111827]", className)}
       {...props}
     />
   )
@@ -43,7 +43,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-description"
-      className={cn("text-xs text-[#94A3B8]", className)}
+      className={cn("text-xs text-[#6B7280]", className)}
       {...props}
     />
   )
@@ -73,7 +73,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-footer"
-      className={cn("flex items-center border-t border-[#2E384D] bg-[#16202E]/60 p-5 py-3", className)}
+      className={cn("flex items-center border-t border-[#E5E7EB] bg-[#F9FAFB] p-5 py-3", className)}
       {...props}
     />
   )
