@@ -118,12 +118,12 @@ export default function DashboardPage() {
   const [promptInput, setPromptInput] = useState("");
 
   return (
-    <div className="flex min-h-screen bg-[#090B0A] text-white">
-      {/* Sidebar (240px according to DESIGN.md) */}
-      <aside className="w-60 shrink-0 border-r border-[#292D2A] bg-[#090B0A] flex flex-col justify-between p-3.5">
-        <div className="space-y-6">
+    <div className="flex h-screen overflow-hidden bg-[#090B0A] text-white">
+      {/* Sidebar (240px according to DESIGN.md) - Height 1 screen, independent scroll */}
+      <aside className="w-60 shrink-0 border-r border-[#292D2A] bg-[#090B0A] flex flex-col h-screen overflow-y-auto p-3.5 scrollbar-thin">
+        <div className="space-y-6 flex-1">
           {/* Workspace Brand / Header */}
-          <div className="flex items-center gap-2.5 px-2.5 py-2">
+          <div className="flex items-center gap-2.5 px-2.5 py-2 sticky top-0 bg-[#090B0A] z-10 pb-2">
             <div className="flex size-7 items-center justify-center rounded-[8px] bg-[#16A34A] text-white font-bold text-sm tracking-wider shadow-sm">
               R
             </div>
@@ -176,7 +176,7 @@ export default function DashboardPage() {
         </div>
 
         {/* User Account & Status Footer */}
-        <div className="border-t border-[#292D2A] pt-3.5 px-1 space-y-3">
+        <div className="border-t border-[#292D2A] pt-3.5 px-1 space-y-3 mt-4 shrink-0">
           <div className="rounded-[10px] bg-[#151916] border border-[#292D2A] p-3 text-xs space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[#A1A1AA] font-medium">Neurons Quota</span>
@@ -205,7 +205,7 @@ export default function DashboardPage() {
       </aside>
 
       {/* Main Workspace Area */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* Topbar (60px high) */}
         <header className="h-[60px] border-b border-[#292D2A] bg-[#090B0A]/80 backdrop-blur-md sticky top-0 z-20 flex items-center justify-between px-7">
           <div className="flex items-center gap-3 w-80">
