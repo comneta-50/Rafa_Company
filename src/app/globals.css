@@ -43,30 +43,30 @@
 }
 
 :root {
-  /* RAFA Company Dark Palette default (Dark-first interface) */
-  --background: #090B0A;
-  --surface: #151916;
-  --surface-hover: #1C211D;
+  /* Clean SaaS Palette: #111827 (Dark Navy), #2563EB (Royal Blue), #1E40AF (Deep Blue), #F3F4F6, #FFFFFF */
+  --background: #111827;
+  --surface: #1E293B;
+  --surface-hover: #263346;
   --foreground: #FFFFFF;
-  --muted: #1A1F1B;
-  --muted-foreground: #A1A1AA;
-  --border: #292D2A;
-  --input: #292D2A;
-  --ring: #16A34A;
+  --muted: #1F2937;
+  --muted-foreground: #94A3B8;
+  --border: #2E384D;
+  --input: #2E384D;
+  --ring: #2563EB;
 
-  --card: #151916;
+  --card: #1E293B;
   --card-foreground: #FFFFFF;
-  --popover: #151916;
+  --popover: #1E293B;
   --popover-foreground: #FFFFFF;
 
-  --primary: #16A34A;
+  --primary: #2563EB;
   --primary-foreground: #FFFFFF;
-  --primary-hover: #15803D;
-  --primary-soft: #14532D;
+  --primary-hover: #1D4ED8;
+  --primary-soft: #1E40AF;
 
-  --secondary: #202522;
-  --secondary-foreground: #FFFFFF;
-  --accent: #1C211D;
+  --secondary: #1F2937;
+  --secondary-foreground: #F3F4F6;
+  --accent: #263346;
   --accent-foreground: #FFFFFF;
   --destructive: #EF4444;
 
@@ -79,29 +79,29 @@
 }
 
 .dark {
-  --background: #090B0A;
-  --surface: #151916;
-  --surface-hover: #1C211D;
+  --background: #111827;
+  --surface: #1E293B;
+  --surface-hover: #263346;
   --foreground: #FFFFFF;
-  --muted: #1A1F1B;
-  --muted-foreground: #A1A1AA;
-  --border: #292D2A;
-  --input: #292D2A;
-  --ring: #16A34A;
+  --muted: #1F2937;
+  --muted-foreground: #94A3B8;
+  --border: #2E384D;
+  --input: #2E384D;
+  --ring: #2563EB;
 
-  --card: #151916;
+  --card: #1E293B;
   --card-foreground: #FFFFFF;
-  --popover: #151916;
+  --popover: #1E293B;
   --popover-foreground: #FFFFFF;
 
-  --primary: #16A34A;
+  --primary: #2563EB;
   --primary-foreground: #FFFFFF;
-  --primary-hover: #15803D;
-  --primary-soft: #14532D;
+  --primary-hover: #1D4ED8;
+  --primary-soft: #1E40AF;
 
-  --secondary: #202522;
-  --secondary-foreground: #FFFFFF;
-  --accent: #1C211D;
+  --secondary: #1F2937;
+  --secondary-foreground: #F3F4F6;
+  --accent: #263346;
   --accent-foreground: #FFFFFF;
   --destructive: #EF4444;
 }
