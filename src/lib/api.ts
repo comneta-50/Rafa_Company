@@ -273,4 +273,35 @@ export const workerApi = {
         body: JSON.stringify({ prompt, code }),
       }
     ),
+
+  // Workspace Settings
+  getSettings: () =>
+    fetchJson<{
+      success: boolean;
+      settings: {
+        workspaceName: string;
+        neuronsBudget: string;
+        apiKey: string;
+        autoApproveLowRisk: boolean;
+        requireQaPass: boolean;
+        llmModel: string;
+        clusterStatus: string;
+      };
+    }>("/api/settings"),
+  updateSettings: (settingsData: Partial<{
+    workspaceName: string;
+    neuronsBudget: string;
+    apiKey: string;
+    autoApproveLowRisk: boolean;
+    requireQaPass: boolean;
+    llmModel: string;
+  }>) =>
+    fetchJson<{
+      success: boolean;
+      message: string;
+      settings: any;
+    }>("/api/settings", {
+      method: "POST",
+      body: JSON.stringify(settingsData),
+    }),
 };
