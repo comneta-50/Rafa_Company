@@ -2,8 +2,9 @@
  * API Client for Rafa Company Platform Backend (Cloudflare Workers)
  */
 
-export const WORKER_API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://rafa-backend-worker.rafa-ai.workers.dev";
+import { Config } from "./config";
+
+export const WORKER_API_BASE_URL = Config.workerApiUrl;
 
 async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${WORKER_API_BASE_URL}${endpoint}`;
