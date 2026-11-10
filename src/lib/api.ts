@@ -188,12 +188,22 @@ export const workerApi = {
 
   // Agents
   getAgents: () => fetchJson<any[]>("/api/agents"),
-  createAgent: (agentData: { name: string; role: string }) =>
+  getAgentStats: () =>
+    fetchJson<{
+      totalAgents: number;
+      onlineAgents: number;
+      busyAgents: number;
+      offlineAgents: number;
+      totalActiveJobs: number;
+      avgEfficiency: string;
+      agents: any[];
+    }>("/api/agents/stats"),
+  createAgent: (agentData: { name: string; role: string; status?: string; efficiency?: string }) =>
     fetchJson<{ success: boolean; agent: any }>("/api/agents", {
       method: "POST",
       body: JSON.stringify(agentData),
     }),
-  updateAgent: (agentName: string, updateData: any) =>
+  updateAgent: (agentName: string, updateData: { role?: string; status?: string; efficiency?: string } | any) =>
     fetchJson<{ success: boolean; message: string }>(
       `/api/agents/${encodeURIComponent(agentName)}`,
       {
