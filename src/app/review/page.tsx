@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ShieldCheck,
   Check,
@@ -22,6 +22,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { workerApi } from "@/lib/api";
 
 const initialReviews = [
   {
@@ -72,24 +73,48 @@ export default function ReviewPage() {
   const [reviews, setReviews] = useState(initialReviews);
   const [diffModalReview, setDiffModalReview] = useState<(typeof initialReviews)[0] | null>(null);
 
-  const handleApprove = (id: string, title: string) => {
+  useEffect(() => {
+    workerApi
+      .getReviews()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setReviews(data);
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch reviews from worker:", err));
+  }, []);
+
+  const handleApprove = async (id: string, title: string) => {
+    try {
+      await workerApi.deleteReview(id);
+    } catch (e) {
+      console.warn("Delete review worker sync error:", e);
+    }
     setReviews((prev) => prev.filter((r) => r.id !== id));
     toast.success(`Disetujui & Di-merge: ${title}`);
     setDiffModalReview(null);
   };
 
-  const handleReject = (id: string, title: string) => {
+  const handleReject = async (id: string, title: string) => {
+    try {
+      await workerApi.deleteReview(id);
+    } catch (e) {
+      console.warn("Delete review worker sync error:", e);
+    }
     setReviews((prev) => prev.filter((r) => r.id !== id));
     toast.error(`Perubahan Ditolak: ${title}`);
     setDiffModalReview(null);
   };
 
-  const handleBatchReview = () => {
+  const handleBatchReview = async () => {
     if (reviews.length === 0) {
       toast.info("Tidak ada review yang tertunda.");
       return;
     }
     const count = reviews.length;
+    for (const r of reviews) {
+      workerApi.deleteReview(r.id).catch(() => {});
+    }
     setReviews([]);
     toast.success(`Batch Approval: Berhasil menyetujui ${count} pull requests sekaligus!`);
   };

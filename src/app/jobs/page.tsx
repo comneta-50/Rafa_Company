@@ -161,6 +161,8 @@ const initialJobs = [
 export default function JobsPage() {
   const [filter, setFilter] = useState("all");
   const [jobsList, setJobsList] = useState(initialJobs);
+  const [ordersList, setOrdersList] = useState<any[]>(availableOrdersForAttach);
+  const [agentsList, setAgentsList] = useState<any[]>(mockAgents);
   const [isAttachModalOpen, setIsAttachModalOpen] = useState(false);
   const [inspectJob, setInspectJob] = useState<(typeof initialJobs)[0] | null>(null);
   const [logModalJob, setLogModalJob] = useState<(typeof initialJobs)[0] | null>(null);
@@ -174,6 +176,32 @@ export default function JobsPage() {
         }
       })
       .catch((err) => console.warn("Failed to fetch jobs from worker:", err));
+
+    workerApi
+      .getOrders()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setOrdersList(
+            data.map((o: any) => ({
+              id: o.id,
+              clientName: o.clientName || o.clientRef || "Client",
+              title: o.bugDescription || "Bug fix task",
+              repoUrl: o.repoUrl || "org/repo",
+              feeAmount: o.feeAmount || "$250.00",
+            }))
+          );
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch orders for jobs attach:", err));
+
+    workerApi
+      .getAgents()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setAgentsList(data);
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch agents for jobs attach:", err));
   }, []);
 
   const filtered = jobsList.filter((j) => {
@@ -182,7 +210,7 @@ export default function JobsPage() {
   });
 
   const handleJobAttached = async (orderId: string, agentName: string) => {
-    const orderData = availableOrdersForAttach.find((o) => o.id === orderId);
+    const orderData = ordersList.find((o) => o.id === orderId);
     if (!orderData) return;
 
     const toastId = toast.loading("Meng-attach job ke antrean backend...");
@@ -392,8 +420,8 @@ export default function JobsPage() {
       <AttachJobModal
         open={isAttachModalOpen}
         onOpenChange={setIsAttachModalOpen}
-        orders={availableOrdersForAttach}
-        agents={mockAgents}
+        orders={ordersList}
+        agents={agentsList}
         onAttached={handleJobAttached}
       />
 

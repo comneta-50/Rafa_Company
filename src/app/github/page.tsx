@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   GitBranch,
   FolderGit2,
@@ -24,6 +24,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { workerApi } from "@/lib/api";
 
 const initialRepos = [
   {
@@ -71,26 +72,54 @@ export default function GitHubPage() {
   const [newRepoDesc, setNewRepoDesc] = useState("");
   const [activeSettingsRepo, setActiveSettingsRepo] = useState<(typeof initialRepos)[0] | null>(null);
 
-  const handleConnectRepo = (e: React.FormEvent) => {
+  useEffect(() => {
+    workerApi
+      .getRepos()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setRepos(data);
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch repos from worker:", err));
+  }, []);
+
+  const handleConnectRepo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newRepoName.trim()) {
       toast.error("Silakan masukkan nama repositori GitHub (contoh: org/repo).");
       return;
     }
-    const newRepo = {
-      name: newRepoName,
-      description: newRepoDesc || "Connected GitHub Repository",
-      stars: 1,
-      defaultBranch: "main",
-      syncedAt: "Just now",
-      status: "Synced",
-      autoFix: true,
-    };
-    setRepos([...repos, newRepo]);
-    toast.success(`Repositori "${newRepoName}" berhasil dihubungkan!`);
-    setNewRepoName("");
-    setNewRepoDesc("");
-    setIsConnectModalOpen(false);
+    const repoName = newRepoName.trim().replace("https://github.com/", "");
+    const toastId = toast.loading(`Menghubungkan repositori ${repoName}...`);
+
+    try {
+      const res = await workerApi.createRepo({
+        name: repoName,
+        description: newRepoDesc || "Connected GitHub Repository",
+        autoFix: true,
+      });
+
+      if (res && res.repo) {
+        setRepos((prev) => [res.repo, ...prev.filter((r) => r.name !== res.repo.name)]);
+      } else {
+        const newRepo = {
+          name: repoName,
+          description: newRepoDesc || "Connected GitHub Repository",
+          stars: 1,
+          defaultBranch: "main",
+          syncedAt: "Just now",
+          status: "Synced",
+          autoFix: true,
+        };
+        setRepos([newRepo, ...repos]);
+      }
+      toast.success(`Repositori "${repoName}" berhasil dihubungkan!`, { id: toastId });
+      setNewRepoName("");
+      setNewRepoDesc("");
+      setIsConnectModalOpen(false);
+    } catch (err: any) {
+      toast.error(`Gagal menghubungkan repo: ${err.message}`, { id: toastId });
+    }
   };
 
   const handleTriggerScan = (repoName: string) => {
@@ -100,9 +129,19 @@ export default function GitHubPage() {
     }, 1500);
   };
 
-  const handleToggleAutoFix = (repoName: string) => {
+  const handleToggleAutoFix = async (repoName: string) => {
+    const current = repos.find((r) => r.name === repoName);
+    const newAutoFix = current ? !current.autoFix : true;
+    try {
+      await workerApi.createRepo({
+        name: repoName,
+        autoFix: newAutoFix,
+      });
+    } catch (e) {
+      console.warn("Toggle repo worker sync error:", e);
+    }
     setRepos((prev) =>
-      prev.map((r) => (r.name === repoName ? { ...r, autoFix: !r.autoFix } : r))
+      prev.map((r) => (r.name === repoName ? { ...r, autoFix: newAutoFix } : r))
     );
     toast.success(`Pengaturan AutoFix untuk ${repoName} diperbarui.`);
     setActiveSettingsRepo(null);

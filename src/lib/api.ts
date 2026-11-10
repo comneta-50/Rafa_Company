@@ -193,6 +193,21 @@ export const workerApi = {
       method: "POST",
       body: JSON.stringify(agentData),
     }),
+  updateAgent: (agentName: string, updateData: any) =>
+    fetchJson<{ success: boolean; message: string }>(
+      `/api/agents/${encodeURIComponent(agentName)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(updateData),
+      }
+    ),
+  deleteAgent: (agentName: string) =>
+    fetchJson<{ success: boolean; message: string }>(
+      `/api/agents/${encodeURIComponent(agentName)}`,
+      {
+        method: "DELETE",
+      }
+    ),
   dispatchAgentJob: (agentName: string) =>
     fetchJson<{ success: boolean; agent: any; job: any }>(
       `/api/agents/${encodeURIComponent(agentName)}/dispatch`,
@@ -203,6 +218,11 @@ export const workerApi = {
 
   // Reviews
   getReviews: () => fetchJson<any[]>("/api/reviews"),
+  createReview: (reviewData: any) =>
+    fetchJson<{ success: boolean; review: any }>("/api/reviews", {
+      method: "POST",
+      body: JSON.stringify(reviewData),
+    }),
   deleteReview: (id: string) =>
     fetchJson<{ success: boolean }>(`/api/reviews/${id}`, {
       method: "DELETE",
@@ -210,11 +230,18 @@ export const workerApi = {
 
   // Repos
   getRepos: () => fetchJson<any[]>("/api/repos"),
-  createRepo: (repoData: { name: string; description?: string; autoFix?: boolean }) =>
+  createRepo: (repoData: { name: string; description?: string; autoFix?: boolean; defaultBranch?: string }) =>
     fetchJson<{ success: boolean; repo: any }>("/api/repos", {
       method: "POST",
       body: JSON.stringify(repoData),
     }),
+  deleteRepo: (repoName: string) =>
+    fetchJson<{ success: boolean; message: string }>(
+      `/api/repos/${encodeURIComponent(repoName)}`,
+      {
+        method: "DELETE",
+      }
+    ),
 
   // Activity Logs
   getActivity: (level?: string) =>
