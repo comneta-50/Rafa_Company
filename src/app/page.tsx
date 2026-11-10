@@ -21,6 +21,7 @@ import {
   RefreshCw,
   FolderGit2,
   ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -115,6 +116,8 @@ const mockAgents = [
 export default function DashboardPage() {
   const [activeNav, setActiveNav] = useState("dashboard");
   const [promptInput, setPromptInput] = useState("");
+  const [isAgentsOpen, setIsAgentsOpen] = useState(true);
+  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F5F5F6] text-[#1C1917]">
@@ -144,10 +147,108 @@ export default function DashboardPage() {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeNav === item.id;
+
+              // Khusus untuk AI Agents: jadikan dropdown kategori
+              if (item.id === "agents") {
+                return (
+                  <div key={item.id} className="space-y-1">
+                    <button
+                      onClick={() => setIsAgentsOpen(!isAgentsOpen)}
+                      className={`flex w-full items-center justify-between px-3 py-2 rounded-[6px] text-[13px] font-medium transition-colors duration-150 ${
+                        activeNav === "agents"
+                          ? "bg-[#FFE4E6] text-[#881337] font-semibold border border-[#FECDD3]"
+                          : "text-[#57534E] hover:text-[#1C1917] hover:bg-[#F5F5F6]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Icon className={`size-4 ${activeNav === "agents" ? "text-[#881337]" : "text-[#78716C]"}`} />
+                        <span>{item.label}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-mono font-medium px-1.5 py-0.2 bg-[#F5F5F6] border border-[#E7E5E4] rounded-[4px] text-[#78716C]">
+                          {mockAgents.length}
+                        </span>
+                        <ChevronDown
+                          className={`size-3.5 text-[#78716C] transition-transform duration-200 ${
+                            isAgentsOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </div>
+                    </button>
+
+                    {/* Konten Dropdown AI Agents dengan status ping */}
+                    {isAgentsOpen && (
+                      <div className="ml-3 pl-2.5 border-l border-[#E7E5E4] space-y-1 py-0.5">
+                        {mockAgents.map((agent) => {
+                          const isOnline = agent.status === "Online";
+                          const isBusy = agent.status === "Busy";
+                          const isAgentSelected = selectedAgent === agent.name;
+
+                          return (
+                            <button
+                              key={agent.name}
+                              onClick={() => {
+                                setSelectedAgent(agent.name);
+                                setActiveNav("agents");
+                              }}
+                              className={`flex w-full items-center justify-between px-2.5 py-1.5 rounded-[4px] text-xs transition-colors duration-150 text-left ${
+                                isAgentSelected
+                                  ? "bg-rose-50/80 text-[#881337] font-medium"
+                                  : "text-[#57534E] hover:text-[#1C1917] hover:bg-[#F5F5F6]"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                {/* Ping Status Indicator */}
+                                <span className="relative flex size-2 shrink-0">
+                                  <span
+                                    className={`absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping ${
+                                      isOnline
+                                        ? "bg-emerald-400"
+                                        : isBusy
+                                        ? "bg-amber-400"
+                                        : "bg-stone-400"
+                                    }`}
+                                  />
+                                  <span
+                                    className={`relative inline-flex size-2 rounded-full ${
+                                      isOnline
+                                        ? "bg-emerald-500"
+                                        : isBusy
+                                        ? "bg-amber-500"
+                                        : "bg-stone-400"
+                                    }`}
+                                  />
+                                </span>
+                                <span className="truncate">{agent.name}</span>
+                              </div>
+
+                              <span
+                                className={`text-[10px] font-mono shrink-0 ml-1 ${
+                                  isOnline
+                                    ? "text-emerald-700"
+                                    : isBusy
+                                    ? "text-amber-700"
+                                    : "text-[#78716C]"
+                                }`}
+                              >
+                                {agent.status}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveNav(item.id)}
+                  onClick={() => {
+                    setActiveNav(item.id);
+                    setSelectedAgent(null);
+                  }}
                   className={`flex w-full items-center justify-between px-3 py-2 rounded-[6px] text-[13px] font-medium transition-colors duration-150 ${
                     isActive
                       ? "bg-[#FFE4E6] text-[#881337] font-semibold border border-[#FECDD3]"
