@@ -107,24 +107,24 @@ Avoid arbitrary spacing values unless a specific layout requires them.
 
 ## 4. Border Radius
 
-Use controlled rounded corners. Avoid excessive rounding.
+Use subtle, crisp rounded corners. Avoid excessive rounding to maintain a sharp, professional developer workspace aesthetic.
 
 | Element | Radius |
 |---|---:|
-| Small badges | 6px |
-| Inputs | 10px |
-| Buttons | 10px |
-| Dropdowns | 10px |
-| Cards | 14px |
-| Modals | 16px |
-| Main containers | 18px |
-| Chat composer | 16px |
+| Small badges | 4px |
+| Inputs | 6px |
+| Buttons | 6px |
+| Dropdowns | 6px |
+| Cards | 8px |
+| Modals | 10px |
+| Main containers | 10px |
+| Chat composer | 8px |
 
 ### Important Rule
 
 **No pill-shaped buttons.**
 
-Do not use `border-radius: 9999px` for standard buttons.
+Do not use `border-radius: 9999px` for standard buttons. Keep edges clean and modern with subtle 6px-8px rounding.
 
 ---
 
@@ -229,9 +229,9 @@ Examples:
 
 | Variant | Height | Horizontal Padding |
 |---|---:|---:|
-| Small | 32px | 12px |
-| Medium | 38px | 16px |
-| Large | 44px | 20px |
+| Small | 34px | 14px |
+| Medium | 40px | 20px |
+| Large | 46px | 24px |
 | Icon Button | 36–40px | — |
 
 ### Button Interaction
@@ -447,12 +447,12 @@ Recommended navigation:
   --section-gap: 24px;
   --component-gap: 16px;
 
-  /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 16px;
-  --radius-2xl: 18px;
+  /* Radius - Subtle & Crisp */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
 
   /* Typography */
   --font-family: "Geist", sans-serif;

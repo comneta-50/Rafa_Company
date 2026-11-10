@@ -123,7 +123,7 @@ export default function DashboardPage() {
         <div className="space-y-6 flex-1">
           {/* Workspace Brand / Header */}
           <div className="flex items-center gap-2.5 px-2.5 py-2 sticky top-0 bg-white z-10 pb-2">
-            <div className="flex size-7 items-center justify-center rounded-[8px] bg-[#881337] text-white font-bold text-sm tracking-wider shadow-xs">
+            <div className="flex size-7 items-center justify-center rounded-[6px] bg-[#881337] text-white font-bold text-sm tracking-wider shadow-xs">
               R
             </div>
             <div className="flex flex-col">
@@ -148,7 +148,7 @@ export default function DashboardPage() {
                 <button
                   key={item.id}
                   onClick={() => setActiveNav(item.id)}
-                  className={`flex w-full items-center justify-between px-3 py-2 rounded-[10px] text-[13px] font-medium transition-colors duration-150 ${
+                  className={`flex w-full items-center justify-between px-3 py-2 rounded-[6px] text-[13px] font-medium transition-colors duration-150 ${
                     isActive
                       ? "bg-[#FFE4E6] text-[#881337] font-semibold border border-[#FECDD3]"
                       : "text-[#57534E] hover:text-[#1C1917] hover:bg-[#F5F5F6]"
@@ -176,7 +176,7 @@ export default function DashboardPage() {
 
         {/* User Account & Status Footer */}
         <div className="border-t border-[#E7E5E4] pt-3.5 px-1 space-y-3 mt-4 shrink-0">
-          <div className="rounded-[10px] bg-[#FAF9F9] border border-[#E7E5E4] p-3 text-xs space-y-2">
+          <div className="rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] p-3 text-xs space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[#78716C] font-medium">Neurons Quota</span>
               <span className="text-[#881337] font-mono font-medium">84,200</span>
@@ -188,8 +188,8 @@ export default function DashboardPage() {
 
           <div className="flex items-center justify-between px-1.5">
             <div className="flex items-center gap-2.5">
-              <Avatar className="size-8 rounded-[8px] border border-[#E7E5E4]">
-                <AvatarFallback className="rounded-[8px] bg-[#F5F5F6] text-xs font-semibold text-[#1C1917]">
+              <Avatar className="size-8 rounded-[6px] border border-[#E7E5E4]">
+                <AvatarFallback className="rounded-[6px] bg-[#F5F5F6] text-xs font-semibold text-[#1C1917]">
                   RC
                 </AvatarFallback>
               </Avatar>
@@ -212,7 +212,7 @@ export default function DashboardPage() {
               <Search className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A29E]" />
               <Input
                 placeholder="Search jobs, repositories, or AI commands..."
-                className="pl-8 bg-[#FAF9F9] border-[#E7E5E4] text-xs h-8.5 placeholder:text-[#A8A29E] rounded-[10px] text-[#1C1917] focus-visible:ring-[#881337]"
+                className="pl-8 bg-[#FAF9F9] border-[#E7E5E4] text-xs h-8.5 placeholder:text-[#A8A29E] rounded-[6px] text-[#1C1917] focus-visible:ring-[#881337]"
               />
             </div>
           </div>
@@ -256,7 +256,7 @@ export default function DashboardPage() {
           {/* AI Interactive Prompt / Dispatch Bar */}
           <Card className="border-[#FECDD3] bg-gradient-to-r from-rose-50/70 to-white">
             <CardContent className="p-4 flex flex-col md:flex-row items-center gap-3">
-              <div className="flex items-center gap-2 text-[#881337] shrink-0 font-medium text-xs px-3 py-1.5 bg-white border border-[#FECDD3] rounded-[6px] shadow-2xs">
+              <div className="flex items-center gap-2 text-[#881337] shrink-0 font-medium text-xs px-3 py-1.5 bg-white border border-[#FECDD3] rounded-[4px] shadow-2xs">
                 <Sparkles className="size-3.5 text-[#881337]" />
                 <span>AI Dispatch</span>
               </div>
@@ -264,7 +264,7 @@ export default function DashboardPage() {
                 value={promptInput}
                 onChange={(e) => setPromptInput(e.target.value)}
                 placeholder="Give an instruction, e.g: 'Analyze branch feat/billing and fix memory leaks'..."
-                className="bg-white border-[#E7E5E4] text-xs h-9.5 rounded-[10px] flex-1 text-[#1C1917] placeholder:text-[#A8A29E]"
+                className="bg-white border-[#E7E5E4] text-xs h-9.5 rounded-[6px] flex-1 text-[#1C1917] placeholder:text-[#A8A29E]"
               />
               <Button variant="default" size="sm" className="shrink-0">
                 <Play className="size-3.5 mr-1 fill-white" /> Run Agent Fix
@@ -339,7 +339,7 @@ export default function DashboardPage() {
                 {mockJobs.map((job) => (
                   <div
                     key={job.id}
-                    className="p-3.5 rounded-[10px] bg-[#FAF9F9] border border-[#E7E5E4] hover:border-[#D6D3D1] hover:bg-white transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                    className="p-3.5 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] hover:border-[#D6D3D1] hover:bg-white transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
                   >
                     <div className="space-y-1.5 flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -397,10 +397,10 @@ export default function DashboardPage() {
                   {mockAgents.map((agent) => (
                     <div
                       key={agent.name}
-                      className="p-3 rounded-[10px] bg-[#FAF9F9] border border-[#E7E5E4] flex items-center justify-between"
+                      className="p-3 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] flex items-center justify-between"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="size-8 rounded-[8px] bg-white border border-[#E7E5E4] flex items-center justify-center font-mono text-xs font-semibold text-[#881337] shadow-2xs">
+                        <div className="size-8 rounded-[6px] bg-white border border-[#E7E5E4] flex items-center justify-center font-mono text-xs font-semibold text-[#881337] shadow-2xs">
                           {agent.avatar}
                         </div>
                         <div className="flex flex-col">
