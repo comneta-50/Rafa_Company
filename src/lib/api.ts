@@ -85,6 +85,18 @@ export const workerApi = {
       method: "POST",
       body: JSON.stringify(orderData),
     }),
+  connectOrderRepo: (id: string) =>
+    fetchJson<{ success: boolean; order: any }>(`/api/orders/${id}/connect-repo`, {
+      method: "POST",
+    }),
+  startOrderFixing: (id: string) =>
+    fetchJson<{ success: boolean; order: any; job: any }>(`/api/orders/${id}/start-fixing`, {
+      method: "POST",
+    }),
+  closeOrder: (id: string) =>
+    fetchJson<{ success: boolean; order: any }>(`/api/orders/${id}/close`, {
+      method: "POST",
+    }),
   updateOrder: (id: string, updateData: any) =>
     fetchJson<{ success: boolean; order: any }>(`/api/orders/${id}`, {
       method: "PATCH",

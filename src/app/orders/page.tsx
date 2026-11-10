@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { workerApi } from "@/lib/api";
 import {
   ShoppingCart,
   Plus,
@@ -125,91 +126,74 @@ export default function OrdersPage() {
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [activeOrderAction, setActiveOrderAction] = useState<LifecycleOrder | null>(null);
 
-  const handleOrderCreated = (data: ClientOrderFormData) => {
-    const newOrder: LifecycleOrder = {
-      id: `ORD-${Math.floor(700 + Math.random() * 200)}`,
-      clientName: data.clientRef,
-      clientEmail: "client@contact.com",
-      packageType: `${data.platform} (${data.contractType})`,
-      feeAmount: data.feeAmount,
-      bugDescription: data.bugDescription,
-      repoUrl: data.repoUrl.replace("https://github.com/", ""),
-      branchName: `ai-fix/ord-${Math.floor(700 + Math.random() * 200)}`,
-      status: "order_created",
-      retentionExpires: "Menunggu koneksi repo",
-      workspaceDestroyed: false,
-    };
-    setOrders([newOrder, ...orders]);
+  useEffect(() => {
+    workerApi
+      .getOrders()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setOrders(data);
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch orders from worker:", err));
+  }, []);
+
+  const handleOrderCreated = async (data: ClientOrderFormData) => {
+    const toastId = toast.loading("Mendaftarkan order ke sistem backend...");
+    try {
+      const res = await workerApi.createOrder({
+        clientRef: data.clientRef,
+        clientName: data.clientRef,
+        clientEmail: "client@contact.com",
+        packageType: `${data.platform} (${data.contractType})`,
+        feeAmount: data.feeAmount,
+        bugDescription: data.bugDescription,
+        repoUrl: data.repoUrl.replace("https://github.com/", ""),
+      });
+
+      if (res && res.order) {
+        setOrders((prev) => [res.order, ...prev]);
+        toast.success(`Order ${res.order.id} berhasil dibuat!`, { id: toastId });
+      } else {
+        toast.success("Order berhasil dibuat!", { id: toastId });
+      }
+    } catch (err: any) {
+      toast.error(`Gagal membuat order: ${err.message}`, { id: toastId });
+    }
   };
 
   // 1. Hubungkan Repo Sementara & Spawn Isolated Workspace
-  const handleConnectTemporaryRepo = (orderId: string) => {
+  const handleConnectTemporaryRepo = async (orderId: string) => {
     toast.loading("Mengotorisasi GitHub App sementara & meng-clone ke isolated workspace...", {
       id: orderId,
     });
-    setTimeout(() => {
-      setOrders((prev) =>
-        prev.map((o) =>
-          o.id === orderId
-            ? {
-                ...o,
-                status: "repo_connected",
-                retentionExpires: "7 Hari (Ephemeral)",
-              }
-            : o
-        )
-      );
+    try {
+      const res = await workerApi.connectOrderRepo(orderId);
+      if (res && res.order) {
+        setOrders((prev) => prev.map((o) => (o.id === orderId ? res.order : o)));
+      }
       toast.success(
         "Repository dihubungkan sementara! Source code di-ingest ke isolated runner.",
         { id: orderId }
       );
-    }, 1200);
+    } catch (err: any) {
+      toast.error(`Gagal menghubungkan repository: ${err.message}`, { id: orderId });
+    }
   };
 
   // 2. Jalankan AI Pipeline (Analyzer -> Approval -> Developer -> QA)
-  const handleStartAIFixing = (orderId: string) => {
+  const handleStartAIFixing = async (orderId: string) => {
     toast.loading("Memulai AI Pipeline: Analyzer Agent mengaudit AST...", { id: orderId });
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === orderId
-          ? { ...o, status: "ai_fixing", aiStage: "Analyzer" }
-          : o
-      )
-    );
-
-    setTimeout(() => {
-      setOrders((prev) =>
-        prev.map((o) =>
-          o.id === orderId
-            ? {
-                ...o,
-                aiStage: "Developer",
-              }
-            : o
-        )
-      );
-      toast.info("Human Gate Disetujui. Developer Agent & QA Runner selesai memverifikasi patch.", {
+    try {
+      const res = await workerApi.startOrderFixing(orderId);
+      if (res && res.order) {
+        setOrders((prev) => prev.map((o) => (o.id === orderId ? res.order : o)));
+      }
+      toast.success("AI Bug fixing pipeline aktif! Developer Agent sedang bekerja.", {
         id: orderId,
       });
-
-      setTimeout(() => {
-        setOrders((prev) =>
-          prev.map((o) =>
-            o.id === orderId
-              ? {
-                  ...o,
-                  status: "client_review",
-                  aiStage: "Ready",
-                  prUrl: `https://github.com/${o.repoUrl}/pull/${Math.floor(10 + Math.random() * 80)}`,
-                }
-              : o
-          )
-        );
-        toast.success("AI Bug fixing selesai! Pull Request & bundle ZIP siap diserahkan ke client.", {
-          id: orderId,
-        });
-      }, 1500);
-    }, 1800);
+    } catch (err: any) {
+      toast.error(`Gagal menjalankan pipeline: ${err.message}`, { id: orderId });
+    }
   };
 
   // 3. Download Bundle Patch ZIP
@@ -221,29 +205,24 @@ export default function OrdersPage() {
   };
 
   // 4. Job Ditutup: Cabut Akses GitHub & Hancurkan Workspace
-  const handleCloseJobAndPurge = (orderId: string) => {
+  const handleCloseJobAndPurge = async (orderId: string) => {
     toast.loading("Mencabut akses token GitHub & membersihkan storage isolated workspace...", {
       id: orderId,
     });
-    setTimeout(() => {
-      setOrders((prev) =>
-        prev.map((o) =>
-          o.id === orderId
-            ? {
-                ...o,
-                status: "job_closed",
-                retentionExpires: "Akses Dicabut & Workspace Dihapus",
-                workspaceDestroyed: true,
-              }
-            : o
-        )
-      );
+    try {
+      const res = await workerApi.closeOrder(orderId);
+      if (res && res.order) {
+        setOrders((prev) => prev.map((o) => (o.id === orderId ? res.order : o)));
+      }
       toast.success(
         "Siklus Selesai: Akses repository telah dicabut & workspace dihapus permanen (Zero Retention).",
         { id: orderId }
       );
+    } catch (err: any) {
+      toast.error(`Gagal menutup order: ${err.message}`, { id: orderId });
+    } finally {
       setActiveOrderAction(null);
-    }, 1500);
+    }
   };
 
   return (
