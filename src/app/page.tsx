@@ -84,18 +84,37 @@ const initialJobs = [
 export default function DashboardPage() {
   const [promptInput, setPromptInput] = useState("");
   const [jobs, setJobs] = useState(initialJobs);
+  const [agents, setAgents] = useState(mockAgents);
+  const [metrics, setMetrics] = useState({
+    activeJobsCount: 4,
+    inProgressCount: 4,
+    onlineAgentsCount: 8,
+    totalAgentsCount: 8,
+    successRate: "98.6%",
+    successRateSubtitle: "Over past 140 PRs",
+    avgResolutionTime: "4m 12s",
+    resolutionDelta: "-35s vs last week",
+    clusterHealth: "Cluster Healthy",
+    latency: "24ms",
+  });
   const [inspectJob, setInspectJob] = useState<(typeof initialJobs)[0] | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     workerApi
-      .getJobs()
+      .getDashboardData()
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setJobs(data);
+        if (data.recentJobs && Array.isArray(data.recentJobs)) {
+          setJobs(data.recentJobs);
+        }
+        if (data.agentsFleet && Array.isArray(data.agentsFleet)) {
+          setAgents(data.agentsFleet);
+        }
+        if (data.metrics) {
+          setMetrics(data.metrics);
         }
       })
-      .catch((err) => console.warn("Failed to load jobs from worker:", err));
+      .catch((err) => console.warn("Failed to load dashboard data from worker:", err));
   }, []);
 
   const handleRunAgentFix = async () => {
@@ -151,10 +170,10 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2">
             <Badge variant="default" className="px-3 py-1">
               <span className="size-1.5 rounded-full bg-[#881337] animate-pulse" />
-              Cluster Healthy
+              {metrics.clusterHealth}
             </Badge>
             <Badge variant="secondary" className="px-3 py-1 font-mono">
-              Lat: 24ms
+              Lat: {metrics.latency}
             </Badge>
           </div>
         </div>
@@ -194,11 +213,11 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">
-                {jobs.length}
+                {metrics.activeJobsCount}
               </div>
               <div className="flex items-center gap-1.5 text-xs text-[#881337] mt-1 font-medium">
                 <ArrowUpRight className="size-3" />
-                <span>4 in-progress execution</span>
+                <span>{metrics.inProgressCount} in-progress execution</span>
               </div>
             </CardContent>
           </Card>
@@ -209,7 +228,9 @@ export default function DashboardPage() {
               <Bot className="size-4 text-[#881337]" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">8 / 8</div>
+              <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">
+                {metrics.onlineAgentsCount} / {metrics.totalAgentsCount}
+              </div>
               <div className="text-xs text-[#78716C] mt-1">100% capacity ready</div>
             </CardContent>
           </Card>
@@ -220,8 +241,10 @@ export default function DashboardPage() {
               <CheckCircle2 className="size-4 text-emerald-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">98.6%</div>
-              <div className="text-xs text-[#78716C] mt-1">Over past 140 PRs</div>
+              <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">
+                {metrics.successRate}
+              </div>
+              <div className="text-xs text-[#78716C] mt-1">{metrics.successRateSubtitle}</div>
             </CardContent>
           </Card>
 
@@ -231,8 +254,12 @@ export default function DashboardPage() {
               <Clock className="size-4 text-[#78716C]" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">4m 12s</div>
-              <div className="text-xs text-[#881337] mt-1 font-medium">-35s vs last week</div>
+              <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">
+                {metrics.avgResolutionTime}
+              </div>
+              <div className="text-xs text-[#881337] mt-1 font-medium">
+                {metrics.resolutionDelta}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -316,7 +343,7 @@ export default function DashboardPage() {
                 <CardDescription>Live health and workload distribution</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 pt-1">
-                {mockAgents.map((agent) => (
+                {agents.map((agent) => (
                   <div
                     key={agent.name}
                     className="p-3 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] flex items-center justify-between"

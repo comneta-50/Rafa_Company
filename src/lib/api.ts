@@ -31,6 +31,27 @@ async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T>
 }
 
 export const workerApi = {
+  // Dashboard Aggregate
+  getDashboardData: () =>
+    fetchJson<{
+      metrics: {
+        activeJobsCount: number;
+        inProgressCount: number;
+        onlineAgentsCount: number;
+        totalAgentsCount: number;
+        successRate: string;
+        successRateSubtitle: string;
+        avgResolutionTime: string;
+        resolutionDelta: string;
+        clusterHealth: string;
+        latency: string;
+      };
+      recentJobs: any[];
+      agentsFleet: any[];
+      recentActivity: any[];
+      pendingReviewsCount: number;
+    }>("/api/dashboard"),
+
   // Metrics
   getMetrics: () =>
     fetchJson<{
