@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { workerApi } from "@/lib/api";
+import { useRealtime } from "@/lib/use-realtime";
 
 export interface NavItem {
   id: string;
@@ -112,6 +113,26 @@ export function Sidebar() {
         setIsLoading(false);
       });
   }, []);
+
+  // Realtime WebSocket update: otomatis memperbarui angka badge dan kuota neurons saat ada job baru
+  useRealtime((msg) => {
+    if (msg.type === "JOB_CREATED") {
+      setCounts((prev) => ({ ...prev, jobs: prev.jobs + 1 }));
+      // Ambil telemetri metrics terbaru
+      workerApi.getMetrics().then((m) => {
+        if (m && m.neurons) {
+          setNeuronsInfo({
+            limit: m.neurons.formattedLimit || "100.000",
+            used: m.neurons.formattedUsed || "0",
+            remaining: m.neurons.formattedRemaining,
+            percentage: m.neurons.percentage,
+          });
+        }
+      });
+    } else if (msg.type === "JOB_DELETED") {
+      setCounts((prev) => ({ ...prev, jobs: Math.max(0, prev.jobs - 1) }));
+    }
+  });
 
   const navCategories: NavCategory[] = [
     {

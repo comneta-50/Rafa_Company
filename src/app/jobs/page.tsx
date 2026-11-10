@@ -31,6 +31,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { AttachJobModal } from "@/components/jobs/attach-job-modal";
+import { useRealtime } from "@/lib/use-realtime";
 
 interface JobItem {
   id: string;
@@ -88,6 +89,19 @@ export default function JobsPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // WebSocket Real-time listener: data jobs langsung bertambah/berubah tanpa perlu refresh
+  const { isConnected } = useRealtime((msg) => {
+    if (msg.type === "JOB_CREATED" && msg.job) {
+      setJobsList((prev) => {
+        const exists = prev.some((j) => j.id === msg.job.id);
+        if (exists) return prev;
+        return [msg.job, ...prev];
+      });
+    } else if (msg.type === "JOB_DELETED" && msg.jobId) {
+      setJobsList((prev) => prev.filter((j) => j.id !== msg.jobId));
+    }
+  });
 
   const filtered = jobsList.filter((j) => {
     if (filter === "all") return true;
@@ -165,6 +179,20 @@ export default function JobsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <span
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-xs font-mono border ${
+                isConnected
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-stone-50 text-stone-500 border-stone-200"
+              }`}
+            >
+              <span
+                className={`size-2 rounded-full ${
+                  isConnected ? "bg-emerald-500 animate-pulse" : "bg-stone-400"
+                }`}
+              />
+              {isConnected ? "WS Live Feed" : "WS Reconnecting..."}
+            </span>
             <Button
               variant="outline"
               size="sm"
