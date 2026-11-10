@@ -117,20 +117,20 @@ export default function DashboardPage() {
   const [promptInput, setPromptInput] = useState("");
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F3F4F6] text-[#111827]">
-      {/* Sidebar - Clean Light SaaS: White background, subtle border #E5E7EB */}
-      <aside className="w-60 shrink-0 border-r border-[#E5E7EB] bg-white flex flex-col h-screen overflow-y-auto p-3.5 scrollbar-thin shadow-2xs">
+    <div className="flex h-screen overflow-hidden bg-[#F4F4F5] text-[#18181B]">
+      {/* Sidebar - Clean Light SaaS with Red Accent: White background, subtle border #E4E4E7 */}
+      <aside className="w-60 shrink-0 border-r border-[#E4E4E7] bg-white flex flex-col h-screen overflow-y-auto p-3.5 scrollbar-thin shadow-2xs">
         <div className="space-y-6 flex-1">
           {/* Workspace Brand / Header */}
           <div className="flex items-center gap-2.5 px-2.5 py-2 sticky top-0 bg-white z-10 pb-2">
-            <div className="flex size-7 items-center justify-center rounded-[8px] bg-[#2563EB] text-white font-bold text-sm tracking-wider shadow-xs">
+            <div className="flex size-7 items-center justify-center rounded-[8px] bg-[#DC2626] text-white font-bold text-sm tracking-wider shadow-xs">
               R
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-sm tracking-tight text-[#111827] leading-none">
+              <span className="font-semibold text-sm tracking-tight text-[#18181B] leading-none">
                 RAFA Company
               </span>
-              <span className="text-[11px] text-[#6B7280] mt-1 font-mono">
+              <span className="text-[11px] text-[#71717A] mt-1 font-mono">
                 AI Workspace v1.0
               </span>
             </div>
@@ -138,7 +138,7 @@ export default function DashboardPage() {
 
           {/* Navigation Links */}
           <nav className="space-y-1">
-            <div className="px-2.5 pb-2 text-[11px] font-medium uppercase tracking-wider text-[#9CA3AF]">
+            <div className="px-2.5 pb-2 text-[11px] font-medium uppercase tracking-wider text-[#A1A1AA]">
               Platform
             </div>
             {navItems.map((item) => {
@@ -150,12 +150,12 @@ export default function DashboardPage() {
                   onClick={() => setActiveNav(item.id)}
                   className={`flex w-full items-center justify-between px-3 py-2 rounded-[10px] text-[13px] font-medium transition-colors duration-150 ${
                     isActive
-                      ? "bg-[#DBEAFE] text-[#1E40AF] font-semibold border border-[#BFDBFE]"
-                      : "text-[#4B5563] hover:text-[#111827] hover:bg-[#F3F4F6]"
+                      ? "bg-[#FEE2E2] text-[#B91C1C] font-semibold border border-[#FECACA]"
+                      : "text-[#52525B] hover:text-[#18181B] hover:bg-[#F4F4F5]"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Icon className={`size-4 ${isActive ? "text-[#2563EB]" : "text-[#6B7280]"}`} />
+                    <Icon className={`size-4 ${isActive ? "text-[#DC2626]" : "text-[#71717A]"}`} />
                     <span>{item.label}</span>
                   </div>
                   {item.badge && (
@@ -164,7 +164,7 @@ export default function DashboardPage() {
                     </Badge>
                   )}
                   {item.count !== undefined && (
-                    <span className="text-[11px] text-[#6B7280] font-mono tabular-nums">
+                    <span className="text-[11px] text-[#71717A] font-mono tabular-nums">
                       {item.count}
                     </span>
                   )}
@@ -175,30 +175,30 @@ export default function DashboardPage() {
         </div>
 
         {/* User Account & Status Footer */}
-        <div className="border-t border-[#E5E7EB] pt-3.5 px-1 space-y-3 mt-4 shrink-0">
-          <div className="rounded-[10px] bg-[#F9FAFB] border border-[#E5E7EB] p-3 text-xs space-y-2">
+        <div className="border-t border-[#E4E4E7] pt-3.5 px-1 space-y-3 mt-4 shrink-0">
+          <div className="rounded-[10px] bg-[#FAFAFA] border border-[#E4E4E7] p-3 text-xs space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[#6B7280] font-medium">Neurons Quota</span>
-              <span className="text-[#2563EB] font-mono font-medium">84,200</span>
+              <span className="text-[#71717A] font-medium">Neurons Quota</span>
+              <span className="text-[#DC2626] font-mono font-medium">84,200</span>
             </div>
-            <div className="w-full bg-[#E5E7EB] rounded-full h-1.5 overflow-hidden">
-              <div className="bg-[#2563EB] h-full rounded-full" style={{ width: "68%" }} />
+            <div className="w-full bg-[#E4E4E7] rounded-full h-1.5 overflow-hidden">
+              <div className="bg-[#DC2626] h-full rounded-full" style={{ width: "68%" }} />
             </div>
           </div>
 
           <div className="flex items-center justify-between px-1.5">
             <div className="flex items-center gap-2.5">
-              <Avatar className="size-8 rounded-[8px] border border-[#E5E7EB]">
-                <AvatarFallback className="rounded-[8px] bg-[#F3F4F6] text-xs font-semibold text-[#111827]">
+              <Avatar className="size-8 rounded-[8px] border border-[#E4E4E7]">
+                <AvatarFallback className="rounded-[8px] bg-[#F4F4F5] text-xs font-semibold text-[#18181B]">
                   RC
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col text-left">
-                <span className="text-xs font-medium text-[#111827]">Smurfish</span>
-                <span className="text-[11px] text-[#6B7280]">Admin</span>
+                <span className="text-xs font-medium text-[#18181B]">Smurfish</span>
+                <span className="text-[11px] text-[#71717A]">Admin</span>
               </div>
             </div>
-            <div className="size-2 rounded-full bg-[#2563EB]" title="System operational" />
+            <div className="size-2 rounded-full bg-[#DC2626]" title="System operational" />
           </div>
         </div>
       </aside>
@@ -206,19 +206,19 @@ export default function DashboardPage() {
       {/* Main Workspace Area */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* Topbar (60px high) */}
-        <header className="h-[60px] border-b border-[#E5E7EB] bg-white/90 backdrop-blur-md sticky top-0 z-20 flex items-center justify-between px-7">
+        <header className="h-[60px] border-b border-[#E4E4E7] bg-white/90 backdrop-blur-md sticky top-0 z-20 flex items-center justify-between px-7">
           <div className="flex items-center gap-3 w-80">
             <div className="relative w-full">
-              <Search className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+              <Search className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#A1A1AA]" />
               <Input
                 placeholder="Search jobs, repositories, or AI commands..."
-                className="pl-8 bg-[#F9FAFB] border-[#E5E7EB] text-xs h-8 placeholder:text-[#9CA3AF] rounded-[10px] text-[#111827] focus-visible:ring-[#2563EB]"
+                className="pl-8 bg-[#FAFAFA] border-[#E4E4E7] text-xs h-8 placeholder:text-[#A1A1AA] rounded-[10px] text-[#18181B] focus-visible:ring-[#DC2626]"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon-sm" className="text-[#6B7280] hover:text-[#111827]">
+            <Button variant="ghost" size="icon-sm" className="text-[#71717A] hover:text-[#18181B]">
               <Bell className="size-4" />
             </Button>
             <Button variant="outline" size="sm">
@@ -233,18 +233,18 @@ export default function DashboardPage() {
         {/* Content Container (Max width 1440px with 28-32px padding) */}
         <div className="max-w-[1440px] w-full mx-auto p-7 space-y-6">
           {/* Welcome & Command Bar */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E5E7EB] pb-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E4E4E7] pb-6">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-[#111827]">
+              <h1 className="text-2xl font-semibold tracking-tight text-[#18181B]">
                 Workspace Overview
               </h1>
-              <p className="text-[13px] text-[#6B7280] mt-1">
+              <p className="text-[13px] text-[#71717A] mt-1">
                 Monitor autonomous agents, review code fixes, and orchestrate CI/CD pipelines.
               </p>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="default" className="px-2.5 py-1">
-                <span className="size-1.5 rounded-full bg-[#2563EB] animate-pulse" />
+                <span className="size-1.5 rounded-full bg-[#DC2626] animate-pulse" />
                 Cluster Healthy
               </Badge>
               <Badge variant="secondary" className="px-2.5 py-1 font-mono">
@@ -254,17 +254,17 @@ export default function DashboardPage() {
           </div>
 
           {/* AI Interactive Prompt / Dispatch Bar */}
-          <Card className="border-[#DBEAFE] bg-gradient-to-r from-blue-50/60 to-white">
+          <Card className="border-[#FECACA] bg-gradient-to-r from-red-50/60 to-white">
             <CardContent className="p-4 flex flex-col md:flex-row items-center gap-3">
-              <div className="flex items-center gap-2 text-[#1E40AF] shrink-0 font-medium text-xs px-2.5 py-1 bg-white border border-[#BFDBFE] rounded-[6px] shadow-2xs">
-                <Sparkles className="size-3.5 text-[#2563EB]" />
+              <div className="flex items-center gap-2 text-[#B91C1C] shrink-0 font-medium text-xs px-2.5 py-1 bg-white border border-[#FECACA] rounded-[6px] shadow-2xs">
+                <Sparkles className="size-3.5 text-[#DC2626]" />
                 <span>AI Dispatch</span>
               </div>
               <Input
                 value={promptInput}
                 onChange={(e) => setPromptInput(e.target.value)}
                 placeholder="Give an instruction, e.g: 'Analyze branch feat/billing and fix memory leaks'..."
-                className="bg-white border-[#E5E7EB] text-xs h-9 rounded-[10px] flex-1 text-[#111827] placeholder:text-[#9CA3AF]"
+                className="bg-white border-[#E4E4E7] text-xs h-9 rounded-[10px] flex-1 text-[#18181B] placeholder:text-[#A1A1AA]"
               />
               <Button variant="default" size="sm" className="shrink-0">
                 <Play className="size-3.5 mr-1 fill-white" /> Run Agent Fix
@@ -277,11 +277,11 @@ export default function DashboardPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardDescription className="text-xs font-medium">Active Jobs</CardDescription>
-                <Terminal className="size-4 text-[#6B7280]" />
+                <Terminal className="size-4 text-[#71717A]" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold font-mono tracking-tight text-[#111827]">12</div>
-                <div className="flex items-center gap-1.5 text-xs text-[#2563EB] mt-1 font-medium">
+                <div className="text-2xl font-bold font-mono tracking-tight text-[#18181B]">12</div>
+                <div className="flex items-center gap-1.5 text-xs text-[#DC2626] mt-1 font-medium">
                   <ArrowUpRight className="size-3" />
                   <span>4 in-progress execution</span>
                 </div>
@@ -291,11 +291,11 @@ export default function DashboardPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardDescription className="text-xs font-medium">AI Agents Online</CardDescription>
-                <Bot className="size-4 text-[#2563EB]" />
+                <Bot className="size-4 text-[#DC2626]" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold font-mono tracking-tight text-[#111827]">8 / 8</div>
-                <div className="text-xs text-[#6B7280] mt-1">100% capacity ready</div>
+                <div className="text-2xl font-bold font-mono tracking-tight text-[#18181B]">8 / 8</div>
+                <div className="text-xs text-[#71717A] mt-1">100% capacity ready</div>
               </CardContent>
             </Card>
 
@@ -305,19 +305,19 @@ export default function DashboardPage() {
                 <CheckCircle2 className="size-4 text-emerald-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold font-mono tracking-tight text-[#111827]">98.6%</div>
-                <div className="text-xs text-[#6B7280] mt-1">Over past 140 PRs</div>
+                <div className="text-2xl font-bold font-mono tracking-tight text-[#18181B]">98.6%</div>
+                <div className="text-xs text-[#71717A] mt-1">Over past 140 PRs</div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardDescription className="text-xs font-medium">Avg Resolution Time</CardDescription>
-                <Clock className="size-4 text-[#6B7280]" />
+                <Clock className="size-4 text-[#71717A]" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold font-mono tracking-tight text-[#111827]">4m 12s</div>
-                <div className="text-xs text-[#2563EB] mt-1 font-medium">-35s vs last week</div>
+                <div className="text-2xl font-bold font-mono tracking-tight text-[#18181B]">4m 12s</div>
+                <div className="text-xs text-[#DC2626] mt-1 font-medium">-35s vs last week</div>
               </CardContent>
             </Card>
           </div>
@@ -331,7 +331,7 @@ export default function DashboardPage() {
                   <CardTitle className="text-sm font-semibold">Active Jobs & Inspections</CardTitle>
                   <CardDescription>Real-time autonomous tasks executing across connected repositories</CardDescription>
                 </div>
-                <Button variant="ghost" size="sm" className="text-xs text-[#6B7280] hover:text-[#111827]">
+                <Button variant="ghost" size="sm" className="text-xs text-[#71717A] hover:text-[#18181B]">
                   View all <ChevronRight className="size-3 ml-1" />
                 </Button>
               </CardHeader>
@@ -339,11 +339,11 @@ export default function DashboardPage() {
                 {mockJobs.map((job) => (
                   <div
                     key={job.id}
-                    className="p-3.5 rounded-[10px] bg-[#F9FAFB] border border-[#E5E7EB] hover:border-[#D1D5DB] hover:bg-white transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                    className="p-3.5 rounded-[10px] bg-[#FAFAFA] border border-[#E4E4E7] hover:border-[#D4D4D8] hover:bg-white transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
                   >
                     <div className="space-y-1.5 flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-xs font-semibold text-[#111827]">{job.id}</span>
+                        <span className="font-mono text-xs font-semibold text-[#18181B]">{job.id}</span>
                         <Badge
                           variant={
                             job.status === "fixing"
@@ -357,14 +357,14 @@ export default function DashboardPage() {
                         >
                           {job.statusLabel}
                         </Badge>
-                        <span className="text-[11px] text-[#6B7280] flex items-center gap-1 font-mono">
+                        <span className="text-[11px] text-[#71717A] flex items-center gap-1 font-mono">
                           <FolderGit2 className="size-3" /> {job.repo}
                         </span>
                       </div>
-                      <p className="text-xs text-[#111827] font-medium truncate">{job.title}</p>
-                      <div className="flex items-center gap-3 text-[11px] text-[#6B7280]">
+                      <p className="text-xs text-[#18181B] font-medium truncate">{job.title}</p>
+                      <div className="flex items-center gap-3 text-[11px] text-[#71717A]">
                         <span className="flex items-center gap-1">
-                          <Cpu className="size-3 text-[#2563EB]" /> {job.agent}
+                          <Cpu className="size-3 text-[#DC2626]" /> {job.agent}
                         </span>
                         <span>•</span>
                         <span className="font-mono">{job.branch}</span>
@@ -397,15 +397,15 @@ export default function DashboardPage() {
                   {mockAgents.map((agent) => (
                     <div
                       key={agent.name}
-                      className="p-3 rounded-[10px] bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-between"
+                      className="p-3 rounded-[10px] bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-between"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="size-8 rounded-[8px] bg-white border border-[#E5E7EB] flex items-center justify-center font-mono text-xs font-semibold text-[#2563EB] shadow-2xs">
+                        <div className="size-8 rounded-[8px] bg-white border border-[#E4E4E7] flex items-center justify-center font-mono text-xs font-semibold text-[#DC2626] shadow-2xs">
                           {agent.avatar}
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-xs font-semibold text-[#111827]">{agent.name}</span>
-                          <span className="text-[11px] text-[#6B7280]">{agent.role}</span>
+                          <span className="text-xs font-semibold text-[#18181B]">{agent.name}</span>
+                          <span className="text-[11px] text-[#71717A]">{agent.role}</span>
                         </div>
                       </div>
                       <div className="text-right">
@@ -415,7 +415,7 @@ export default function DashboardPage() {
                         >
                           {agent.status}
                         </Badge>
-                        <div className="text-[11px] text-[#6B7280] mt-1 font-mono">
+                        <div className="text-[11px] text-[#71717A] mt-1 font-mono">
                           {agent.activeJobs} jobs
                         </div>
                       </div>
@@ -429,9 +429,9 @@ export default function DashboardPage() {
               </Card>
 
               {/* Security & Code Review Approval Box */}
-              <Card className="border-[#BFDBFE] bg-blue-50/50">
+              <Card className="border-[#FECACA] bg-red-50/50">
                 <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2 text-[#1E40AF]">
+                  <div className="flex items-center gap-2 text-[#B91C1C]">
                     <ShieldCheck className="size-4" />
                     <span className="text-xs font-semibold uppercase tracking-wider">
                       Human Review Gate
@@ -439,8 +439,8 @@ export default function DashboardPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <p className="text-xs text-[#4B5563] leading-relaxed">
-                    2 high-impact changes generated by <span className="font-semibold text-[#111827]">AutoFix Engineer</span> require explicit human sign-off before merging into main.
+                  <p className="text-xs text-[#52525B] leading-relaxed">
+                    2 high-impact changes generated by <span className="font-semibold text-[#18181B]">AutoFix Engineer</span> require explicit human sign-off before merging into main.
                   </p>
                   <div className="flex items-center gap-2 pt-1">
                     <Button variant="default" size="sm" className="w-full text-xs">

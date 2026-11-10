@@ -43,39 +43,40 @@
 }
 
 :root {
-  /* Clean SaaS Light Palette:
-     Main BG: #F3F4F6 (Cool light grey)
+  /* Crimson / Red Clean SaaS Light Palette:
+     Main BG: #FAFAFA / #F4F4F5 (Cool light slate)
      Surface/Cards: #FFFFFF
-     Main Text: #111827 (Deep dark navy)
-     Muted Text: #6B7280
-     Borders: #E5E7EB
-     Primary: #2563EB (Royal Blue)
-     Primary Hover: #1E40AF
+     Main Text: #18181B / #09090B
+     Muted Text: #71717A
+     Borders: #E4E4E7
+     Primary: #DC2626 (Vibrant Crimson Red)
+     Primary Hover: #B91C1C (Deep Crimson)
+     Primary Soft: #FEE2E2
   */
-  --background: #F3F4F6;
+  --background: #F4F4F5;
   --surface: #FFFFFF;
-  --surface-hover: #F9FAFB;
-  --foreground: #111827;
-  --muted: #F3F4F6;
-  --muted-foreground: #6B7280;
-  --border: #E5E7EB;
-  --input: #E5E7EB;
-  --ring: #2563EB;
+  --surface-hover: #FAFAFA;
+  --foreground: #18181B;
+  --muted: #F4F4F5;
+  --muted-foreground: #71717A;
+  --border: #E4E4E7;
+  --input: #E4E4E7;
+  --ring: #DC2626;
 
   --card: #FFFFFF;
-  --card-foreground: #111827;
+  --card-foreground: #18181B;
   --popover: #FFFFFF;
-  --popover-foreground: #111827;
+  --popover-foreground: #18181B;
 
-  --primary: #2563EB;
+  --primary: #DC2626;
   --primary-foreground: #FFFFFF;
-  --primary-hover: #1E40AF;
-  --primary-soft: #DBEAFE;
+  --primary-hover: #B91C1C;
+  --primary-soft: #FEE2E2;
 
-  --secondary: #F3F4F6;
-  --secondary-foreground: #111827;
-  --accent: #F9FAFB;
-  --accent-foreground: #111827;
+  --secondary: #F4F4F5;
+  --secondary-foreground: #18181B;
+  --accent: #FAFAFA;
+  --accent-foreground: #18181B;
   --destructive: #EF4444;
 
   --radius-sm: 6px;
