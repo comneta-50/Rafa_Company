@@ -16,15 +16,15 @@ import {
   Play,
   ShieldCheck,
   Eye,
-  Check,
+  Inbox,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Header } from "@/components/layout/header";
-import { mockAgents } from "@/components/layout/sidebar";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -34,87 +34,45 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-const initialJobs = [
-  {
-    id: "JOB-4092",
-    repo: "comneta-50/site-ai-company",
-    branch: "feat/auth-middleware",
-    title: "Fix Token Expiration & Race Condition in Auth Guard",
-    agent: "Analyzer Agent #04",
-    status: "fixing",
-    statusLabel: "Fixing",
-    time: "2m ago",
-    progress: "68%",
-  },
-  {
-    id: "JOB-4089",
-    repo: "comneta-50/core-api-service",
-    branch: "main",
-    title: "Optimize PostgreSQL connection pooling under heavy load",
-    agent: "Optimizer Bot",
-    status: "testing",
-    statusLabel: "Testing",
-    time: "14m ago",
-    progress: "92%",
-  },
-  {
-    id: "JOB-4085",
-    repo: "comneta-50/web-frontend",
-    branch: "fix/hydration-error",
-    title: "Resolve SSR hydration mismatch on localized landing route",
-    agent: "CodeReviewer v2",
-    status: "review",
-    statusLabel: "Review",
-    time: "48m ago",
-    progress: "100%",
-  },
-  {
-    id: "JOB-4081",
-    repo: "comneta-50/analytics-worker",
-    branch: "release/v1.2",
-    title: "Patch Redis pipeline buffer overflow in batch consumer",
-    agent: "Security Guard",
-    status: "completed",
-    statusLabel: "Completed",
-    time: "2h ago",
-    progress: "100%",
-  },
-];
+interface DashboardMetric {
+  activeJobsCount: number;
+  inProgressCount: number;
+  onlineAgentsCount: number;
+  totalAgentsCount: number;
+  successRate: string;
+  successRateSubtitle: string;
+  avgResolutionTime: string;
+  resolutionDelta: string;
+  clusterHealth: string;
+  latency: string;
+}
 
 export default function DashboardPage() {
   const [promptInput, setPromptInput] = useState("");
-  const [jobs, setJobs] = useState(initialJobs);
-  const [agents, setAgents] = useState(mockAgents);
-  const [metrics, setMetrics] = useState({
-    activeJobsCount: 4,
-    inProgressCount: 4,
-    onlineAgentsCount: 8,
-    totalAgentsCount: 8,
-    successRate: "98.6%",
-    successRateSubtitle: "Over past 140 PRs",
-    avgResolutionTime: "4m 12s",
-    resolutionDelta: "-35s vs last week",
-    clusterHealth: "Cluster Healthy",
-    latency: "24ms",
-  });
-  const [inspectJob, setInspectJob] = useState<(typeof initialJobs)[0] | null>(null);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [agents, setAgents] = useState<any[]>([]);
+  const [metrics, setMetrics] = useState<DashboardMetric | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [inspectJob, setInspectJob] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    setIsLoading(true);
     workerApi
       .getDashboardData()
       .then((data) => {
-        if (data.recentJobs && Array.isArray(data.recentJobs)) {
-          setJobs(data.recentJobs);
-        }
-        if (data.agentsFleet && Array.isArray(data.agentsFleet)) {
-          setAgents(data.agentsFleet);
-        }
+        setJobs(data.recentJobs || []);
+        setAgents(data.agentsFleet || []);
         if (data.metrics) {
           setMetrics(data.metrics);
         }
       })
-      .catch((err) => console.warn("Failed to load dashboard data from worker:", err));
+      .catch((err) => {
+        console.warn("Failed to load dashboard data from worker:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   const handleRunAgentFix = async () => {
@@ -127,7 +85,6 @@ export default function DashboardPage() {
     const toastId = toast.loading("Mengirim tugas ke Workers AI cluster...");
 
     try {
-      // 1. Trigger backend job creation & Workers AI analysis
       const res = await workerApi.createJob({
         title: promptInput,
         repo: "comneta-50/site-ai-company",
@@ -149,7 +106,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleInspect = (job: (typeof initialJobs)[0]) => {
+  const handleInspect = (job: any) => {
     setInspectJob(job);
   };
 
@@ -168,13 +125,22 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="default" className="px-3 py-1">
-              <span className="size-1.5 rounded-full bg-[#881337] animate-pulse" />
-              {metrics.clusterHealth}
-            </Badge>
-            <Badge variant="secondary" className="px-3 py-1 font-mono">
-              Lat: {metrics.latency}
-            </Badge>
+            {isLoading ? (
+              <>
+                <Skeleton className="h-6 w-28 rounded-full" />
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </>
+            ) : (
+              <>
+                <Badge variant="default" className="px-3 py-1">
+                  <span className="size-1.5 rounded-full bg-[#881337] animate-pulse" />
+                  {metrics?.clusterHealth || "Cluster Healthy"}
+                </Badge>
+                <Badge variant="secondary" className="px-3 py-1 font-mono">
+                  Lat: {metrics?.latency || "24ms"}
+                </Badge>
+              </>
+            )}
           </div>
         </div>
 
@@ -204,62 +170,106 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Metric Statistics Cards */}
+        {/* Metric Statistics Cards (Shimmer Loading atau Real Data) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Card 1: Active Jobs */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardDescription className="text-xs font-medium">Active Jobs</CardDescription>
               <Terminal className="size-4 text-[#78716C]" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">
-                {metrics.activeJobsCount}
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-[#881337] mt-1 font-medium">
-                <ArrowUpRight className="size-3" />
-                <span>{metrics.inProgressCount} in-progress execution</span>
-              </div>
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">
+                    {metrics?.activeJobsCount ?? jobs.length}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-[#881337] mt-1 font-medium">
+                    <ArrowUpRight className="size-3" />
+                    <span>{metrics?.inProgressCount ?? 0} in-progress execution</span>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
+          {/* Card 2: AI Agents Online */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardDescription className="text-xs font-medium">AI Agents Online</CardDescription>
               <Bot className="size-4 text-[#881337]" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">
-                {metrics.onlineAgentsCount} / {metrics.totalAgentsCount}
-              </div>
-              <div className="text-xs text-[#78716C] mt-1">100% capacity ready</div>
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-3 w-28" />
+                </div>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">
+                    {metrics ? `${metrics.onlineAgentsCount} / ${metrics.totalAgentsCount}` : `${agents.length} / ${agents.length}`}
+                  </div>
+                  <div className="text-xs text-[#78716C] mt-1">
+                    {agents.length > 0 ? "Ready for task allocation" : "Cluster idle"}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
+          {/* Card 3: Success Rate */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardDescription className="text-xs font-medium">Success Rate</CardDescription>
               <CheckCircle2 className="size-4 text-emerald-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">
-                {metrics.successRate}
-              </div>
-              <div className="text-xs text-[#78716C] mt-1">{metrics.successRateSubtitle}</div>
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">
+                    {metrics?.successRate || "100%"}
+                  </div>
+                  <div className="text-xs text-[#78716C] mt-1">
+                    {metrics?.successRateSubtitle || "Verified pipelines"}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
+          {/* Card 4: Avg Resolution Time */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardDescription className="text-xs font-medium">Avg Resolution Time</CardDescription>
               <Clock className="size-4 text-[#78716C]" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">
-                {metrics.avgResolutionTime}
-              </div>
-              <div className="text-xs text-[#881337] mt-1 font-medium">
-                {metrics.resolutionDelta}
-              </div>
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-3 w-28" />
+                </div>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">
+                    {metrics?.avgResolutionTime || "0m 00s"}
+                  </div>
+                  <div className="text-xs text-[#881337] mt-1 font-medium">
+                    {metrics?.resolutionDelta || "Normal load"}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -280,58 +290,98 @@ export default function DashboardPage() {
               </Link>
             </CardHeader>
             <CardContent className="space-y-3 pt-2">
-              {jobs.map((job) => (
-                <div
-                  key={job.id}
-                  className="p-3.5 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] hover:border-[#D6D3D1] hover:bg-white transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
-                >
-                  <div className="space-y-1.5 flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-xs font-semibold text-[#1C1917]">{job.id}</span>
-                      <Badge
-                        variant={
-                          job.status === "fixing"
-                            ? "fixing"
-                            : job.status === "testing"
-                            ? "testing"
-                            : "default"
-                        }
-                      >
-                        {job.statusLabel}
-                      </Badge>
-                      <span className="text-[11px] text-[#78716C] flex items-center gap-1 font-mono">
-                        <FolderGit2 className="size-3" /> {job.repo}
-                      </span>
+              {isLoading ? (
+                // Shimmer Skeleton Rows
+                [1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="p-3.5 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                  >
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-4 w-14 rounded-full" />
+                        <Skeleton className="h-4 w-36" />
+                      </div>
+                      <Skeleton className="h-4 w-4/5" />
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
                     </div>
-                    <p className="text-xs text-[#1C1917] font-medium truncate">{job.title}</p>
-                    <div className="flex items-center gap-3 text-[11px] text-[#78716C]">
-                      <span className="flex items-center gap-1">
-                        <Cpu className="size-3 text-[#881337]" /> {job.agent}
-                      </span>
-                      <span>•</span>
-                      <span className="font-mono">{job.branch}</span>
-                      <span>•</span>
-                      <span>{job.time}</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Skeleton className="h-8 w-16 rounded-[6px]" />
+                      <Skeleton className="h-8 w-20 rounded-[6px]" />
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2 sm:self-center shrink-0">
-                    <Link href="/jobs">
-                      <Button variant="secondary" size="sm" className="text-xs">
-                        Details
-                      </Button>
-                    </Link>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="text-xs"
-                      onClick={() => handleInspect(job)}
-                    >
-                      <Eye className="size-3 mr-1" /> Inspect
-                    </Button>
+                ))
+              ) : jobs.length === 0 ? (
+                // Empty State jika belum ada jobs
+                <div className="py-12 px-4 text-center rounded-[6px] bg-[#FAF9F9] border border-dashed border-[#E7E5E4] space-y-3">
+                  <div className="size-10 rounded-full bg-white border border-[#E7E5E4] flex items-center justify-center mx-auto text-[#78716C] shadow-2xs">
+                    <Inbox className="size-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-[#1C1917]">Belum ada active jobs</h3>
+                    <p className="text-xs text-[#78716C] max-w-sm mx-auto mt-1">
+                      Ketik instruksi perbaikan bug pada kolom AI Dispatch di atas untuk memulai eksekusi agen.
+                    </p>
                   </div>
                 </div>
-              ))}
+              ) : (
+                jobs.map((job) => (
+                  <div
+                    key={job.id}
+                    className="p-3.5 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] hover:border-[#D6D3D1] hover:bg-white transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                  >
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-xs font-semibold text-[#1C1917]">{job.id}</span>
+                        <Badge
+                          variant={
+                            job.status === "fixing"
+                              ? "fixing"
+                              : job.status === "testing"
+                              ? "testing"
+                              : "default"
+                          }
+                        >
+                          {job.statusLabel || job.status}
+                        </Badge>
+                        <span className="text-[11px] text-[#78716C] flex items-center gap-1 font-mono">
+                          <FolderGit2 className="size-3" /> {job.repo}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#1C1917] font-medium truncate">{job.title}</p>
+                      <div className="flex items-center gap-3 text-[11px] text-[#78716C]">
+                        <span className="flex items-center gap-1">
+                          <Cpu className="size-3 text-[#881337]" /> {job.agent}
+                        </span>
+                        <span>•</span>
+                        <span className="font-mono">{job.branch}</span>
+                        <span>•</span>
+                        <span>{job.time}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 sm:self-center shrink-0">
+                      <Link href="/jobs">
+                        <Button variant="secondary" size="sm" className="text-xs">
+                          Details
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => handleInspect(job)}
+                      >
+                        <Eye className="size-3 mr-1" /> Inspect
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
 
@@ -343,33 +393,56 @@ export default function DashboardPage() {
                 <CardDescription>Live health and workload distribution</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 pt-1">
-                {agents.map((agent) => (
-                  <div
-                    key={agent.name}
-                    className="p-3 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="size-8 rounded-[6px] bg-white border border-[#E7E5E4] flex items-center justify-center font-mono text-xs font-semibold text-[#881337] shadow-2xs">
-                        {agent.avatar}
+                {isLoading ? (
+                  // Shimmer Skeleton Agents
+                  [1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="p-3 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="size-8 rounded-[6px]" />
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-3.5 w-24" />
+                          <Skeleton className="h-3 w-36" />
+                        </div>
                       </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs font-semibold text-[#1C1917]">{agent.name}</span>
-                        <span className="text-[11px] text-[#78716C]">{agent.role}</span>
-                      </div>
+                      <Skeleton className="h-5 w-14 rounded-full" />
                     </div>
-                    <div className="text-right">
-                      <Badge
-                        variant={agent.status === "Online" ? "completed" : "testing"}
-                        className="text-[10px]"
-                      >
-                        {agent.status}
-                      </Badge>
-                      <div className="text-[11px] text-[#78716C] mt-1 font-mono">
-                        {agent.activeJobs} jobs
-                      </div>
-                    </div>
+                  ))
+                ) : agents.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-[#78716C] bg-[#FAF9F9] rounded-[6px] border border-dashed border-[#E7E5E4]">
+                    Belum ada AI agent yang ter-deploy.
                   </div>
-                ))}
+                ) : (
+                  agents.map((agent) => (
+                    <div
+                      key={agent.name}
+                      className="p-3 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="size-8 rounded-[6px] bg-white border border-[#E7E5E4] flex items-center justify-center font-mono text-xs font-semibold text-[#881337] shadow-2xs">
+                          {agent.avatar}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-semibold text-[#1C1917]">{agent.name}</span>
+                          <span className="text-[11px] text-[#78716C]">{agent.role}</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Badge
+                          variant={agent.status === "Online" ? "completed" : "testing"}
+                          className="text-[10px]"
+                        >
+                          {agent.status}
+                        </Badge>
+                        <div className="text-[11px] text-[#78716C] mt-1 font-mono">
+                          {agent.activeJobs} jobs
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
 
                 <Link href="/agents" className="block pt-1">
                   <Button variant="outline" className="w-full text-xs" size="sm">
@@ -391,7 +464,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-xs text-[#57534E] leading-relaxed">
-                  2 high-impact changes generated by <span className="font-semibold text-[#1C1917]">AutoFix Engineer</span> require explicit human sign-off before merging into main.
+                  Automated pull requests generated by AI agents require explicit human sign-off before merging into main.
                 </p>
                 <div className="flex items-center gap-2 pt-1">
                   <Link href="/review" className="w-full">
@@ -428,7 +501,7 @@ export default function DashboardPage() {
                 <div className="text-[11px] text-[#78716C]">$ git fetch origin && ast-analyzer --target .</div>
                 <div className="text-emerald-700">✓ Parsed 24 AST nodes successfully</div>
                 <div className="text-[#1C1917]">✓ Generated differential patch in src/middleware.ts</div>
-                <div className="text-[#881337]">... Running test suite regression tests ({inspectJob.progress})</div>
+                <div className="text-[#881337]">... Running test suite regression tests ({inspectJob.progress}%)</div>
               </div>
             </div>
 
