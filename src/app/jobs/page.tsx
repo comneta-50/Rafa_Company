@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { workerApi } from "@/lib/api";
 import {
   Terminal,
   FolderGit2,
@@ -164,46 +165,60 @@ export default function JobsPage() {
   const [inspectJob, setInspectJob] = useState<(typeof initialJobs)[0] | null>(null);
   const [logModalJob, setLogModalJob] = useState<(typeof initialJobs)[0] | null>(null);
 
+  useEffect(() => {
+    workerApi
+      .getJobs()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setJobsList(data);
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch jobs from worker:", err));
+  }, []);
+
   const filtered = jobsList.filter((j) => {
     if (filter === "all") return true;
     return j.status === filter;
   });
 
-  const handleJobAttached = (orderId: string, agentName: string) => {
+  const handleJobAttached = async (orderId: string, agentName: string) => {
     const orderData = availableOrdersForAttach.find((o) => o.id === orderId);
     if (!orderData) return;
 
-    const newJob = {
-      id: `JOB-${Math.floor(4100 + Math.random() * 900)}`,
-      orderId,
-      repo: orderData.repoUrl,
-      branch: `ai-fix/${orderId.toLowerCase()}`,
-      title: orderData.title,
-      agent: agentName,
-      status: "fixing",
-      statusLabel: "Fixing",
-      time: "Just now",
-      progress: 20,
-      logs: [
-        `Ingested from Client Order: ${orderId}`,
-        `Assigned executor agent: ${agentName}`,
-        `Initializing isolated runner environment...`,
-      ],
-    };
+    const toastId = toast.loading("Meng-attach job ke antrean backend...");
+    try {
+      const res = await workerApi.createJob({
+        orderId,
+        repo: orderData.repoUrl,
+        title: orderData.title,
+        agent: agentName,
+      });
 
-    setJobsList([newJob, ...jobsList]);
+      if (res && res.job) {
+        setJobsList((prev) => [res.job, ...prev]);
+        toast.success(`Job berhasil di-attach dan dialokasikan ke ${agentName}!`, { id: toastId });
+      } else {
+        toast.success(`Job berhasil di-attach!`, { id: toastId });
+      }
+    } catch (err: any) {
+      toast.error(`Gagal meng-attach job: ${err.message}`, { id: toastId });
+    }
   };
 
-  const handleRetryJob = (jobId: string) => {
-    setJobsList((prev) =>
-      prev.map((j) =>
-        j.id === jobId
-          ? { ...j, status: "fixing", statusLabel: "Fixing", progress: 15 }
-          : j
-      )
-    );
-    toast.success(`Job ${jobId} di-trigger ulang dan kembali masuk ke antrean eksekusi.`);
-    setInspectJob(null);
+  const handleRetryJob = async (jobId: string) => {
+    const toastId = toast.loading(`Memicu ulang eksekusi job ${jobId}...`);
+    try {
+      const res = await workerApi.retryJob(jobId);
+      if (res && res.job) {
+        setJobsList((prev) => prev.map((j) => (j.id === jobId ? res.job : j)));
+      }
+      toast.success(`Job ${jobId} di-trigger ulang dan kembali masuk ke antrean eksekusi.`, {
+        id: toastId,
+      });
+      setInspectJob(null);
+    } catch (err: any) {
+      toast.error(`Gagal me-retry job: ${err.message}`, { id: toastId });
+    }
   };
 
   return (

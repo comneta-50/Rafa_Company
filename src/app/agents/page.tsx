@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { workerApi } from "@/lib/api";
 import {
   Bot,
   Plus,
@@ -59,37 +60,56 @@ export default function AgentsPage() {
   const [newAgentRole, setNewAgentRole] = useState("");
   const [activeConfigAgent, setActiveConfigAgent] = useState<(typeof initialAgents)[0] | null>(null);
 
-  const handleDeployAgent = (e: React.FormEvent) => {
+  useEffect(() => {
+    workerApi
+      .getAgents()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setAgentsList(data);
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch agents from worker:", err));
+  }, []);
+
+  const handleDeployAgent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAgentName.trim() || !newAgentRole.trim()) {
       toast.error("Silakan isi nama dan peran agen.");
       return;
     }
-    const initials = newAgentName
-      .split(" ")
-      .map((w) => w[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
 
-    const created = {
-      name: newAgentName,
-      role: newAgentRole,
-      status: "Online",
-      activeJobs: 0,
-      efficiency: "99.9%",
-      avatar: initials || "AI",
-    };
+    const toastId = toast.loading("Mendeploy agent ke cluster backend...");
+    try {
+      const res = await workerApi.createAgent({
+        name: newAgentName,
+        role: newAgentRole,
+      });
 
-    setAgentsList([...agentsList, created]);
-    toast.success(`Agent "${newAgentName}" berhasil di-deploy ke cluster!`);
-    setNewAgentName("");
-    setNewAgentRole("");
-    setIsDeployModalOpen(false);
+      if (res && res.agent) {
+        setAgentsList((prev) => [...prev, res.agent]);
+      }
+      toast.success(`Agent "${newAgentName}" berhasil di-deploy ke cluster!`, { id: toastId });
+      setNewAgentName("");
+      setNewAgentRole("");
+      setIsDeployModalOpen(false);
+    } catch (err: any) {
+      toast.error(`Gagal mendeploy agent: ${err.message}`, { id: toastId });
+    }
   };
 
-  const handleDispatchJob = (agentName: string) => {
-    toast.success(`Job instan dikirim ke ${agentName}. Agent sedang menganalisis pipeline...`);
+  const handleDispatchJob = async (agentName: string) => {
+    const toastId = toast.loading(`Mengirim instant task ke ${agentName}...`);
+    try {
+      const res = await workerApi.dispatchAgentJob(agentName);
+      if (res && res.agent) {
+        setAgentsList((prev) => prev.map((a) => (a.name === agentName ? res.agent : a)));
+      }
+      toast.success(`Job instan terkirim! ${agentName} sedang menganalisis pipeline.`, {
+        id: toastId,
+      });
+    } catch (err: any) {
+      toast.error(`Gagal mengirim task: ${err.message}`, { id: toastId });
+    }
   };
 
   return (

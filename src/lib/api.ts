@@ -66,16 +66,25 @@ export const workerApi = {
     }>("/api/metrics"),
 
   // Jobs
-  getJobs: () => fetchJson<any[]>("/api/jobs"),
+  getJobs: (status?: string) =>
+    fetchJson<any[]>(`/api/jobs${status && status !== "all" ? `?status=${status}` : ""}`),
   createJob: (jobData: { title: string; repo?: string; agent?: string; orderId?: string }) =>
     fetchJson<{ success: boolean; job: any }>("/api/jobs", {
       method: "POST",
       body: JSON.stringify(jobData),
     }),
+  retryJob: (id: string) =>
+    fetchJson<{ success: boolean; job: any }>(`/api/jobs/${id}/retry`, {
+      method: "POST",
+    }),
   updateJob: (id: string, updateData: any) =>
     fetchJson<{ success: boolean; job: any }>(`/api/jobs/${id}`, {
       method: "PATCH",
       body: JSON.stringify(updateData),
+    }),
+  deleteJob: (id: string) =>
+    fetchJson<{ success: boolean }>(`/api/jobs/${id}`, {
+      method: "DELETE",
     }),
 
   // Orders
@@ -114,6 +123,13 @@ export const workerApi = {
       method: "POST",
       body: JSON.stringify(agentData),
     }),
+  dispatchAgentJob: (agentName: string) =>
+    fetchJson<{ success: boolean; agent: any; job: any }>(
+      `/api/agents/${encodeURIComponent(agentName)}/dispatch`,
+      {
+        method: "POST",
+      }
+    ),
 
   // Reviews
   getReviews: () => fetchJson<any[]>("/api/reviews"),
