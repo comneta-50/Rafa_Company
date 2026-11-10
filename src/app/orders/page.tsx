@@ -3,30 +3,25 @@
 import React, { useState, useEffect } from "react";
 import { workerApi } from "@/lib/api";
 import {
-  ShoppingCart,
-  Plus,
   GitBranch,
   ShieldAlert,
-  ShieldCheck,
   CheckCircle2,
   Trash2,
   Clock,
   Download,
   ExternalLink,
   Bot,
-  FileCode,
-  ArrowRight,
   Archive,
-  RefreshCw,
   FolderGit2,
   Lock,
-  DollarSign,
+  Inbox,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -59,22 +54,27 @@ export interface LifecycleOrder {
   workspaceDestroyed?: boolean;
 }
 
-const initialOrders: LifecycleOrder[] = [];
-
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<LifecycleOrder[]>(initialOrders);
+  const [orders, setOrders] = useState<LifecycleOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [activeOrderAction, setActiveOrderAction] = useState<LifecycleOrder | null>(null);
 
   useEffect(() => {
+    setIsLoading(true);
     workerApi
       .getOrders()
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setOrders(data);
         }
       })
-      .catch((err) => console.warn("Failed to fetch orders from worker:", err));
+      .catch((err) => {
+        console.warn("Failed to fetch orders from worker:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   const handleOrderCreated = async (data: ClientOrderFormData) => {
@@ -252,180 +252,237 @@ export default function OrdersPage() {
           </CardContent>
         </Card>
 
-        {/* Orders Listing Container */}
+        {/* Orders Listing Container (Shimmer Loading / Empty State / Orders List) */}
         <div className="space-y-4">
-          {orders.map((order) => {
-            const isClosed = order.status === "job_closed";
-            const isReview = order.status === "client_review";
-            const isFixing = order.status === "ai_fixing";
-            const isConnected = order.status === "repo_connected";
-            const isCreated = order.status === "order_created";
-
-            return (
-              <Card
-                key={order.id}
-                className={`transition-all ${
-                  isClosed
-                    ? "opacity-75 bg-[#FAF9F9]"
-                    : "hover:border-[#D6D3D1] hover:shadow-2xs"
-                }`}
-              >
+          {isLoading ? (
+            // Shimmer Skeleton Cards untuk Client Orders
+            [1, 2, 3].map((i) => (
+              <Card key={i} className="border border-[#E7E5E4] shadow-2xs">
                 <CardHeader className="bg-[#FAF9F9] border-b border-[#E7E5E4] pb-3">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <span className="font-mono text-xs font-bold text-[#881337]">
-                          {order.id}
-                        </span>
-                        <span className="text-sm font-semibold text-[#1C1917]">
-                          {order.clientName}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-[4px] bg-rose-50 text-[#881337] font-mono font-bold text-xs border border-[#FECDD3]">
-                          {order.feeAmount}
-                        </span>
-                        <Badge
-                          variant={
-                            isClosed
-                              ? "secondary"
-                              : isReview
-                              ? "completed"
-                              : isFixing
-                              ? "fixing"
-                              : isConnected
-                              ? "testing"
-                              : "outline"
-                          }
-                          className="text-[10px]"
-                        >
-                          {isClosed
-                            ? "JOB DITUTUP (PURGED)"
-                            : isReview
-                            ? "MENUNGGU REVIEW CLIENT"
-                            : isFixing
-                            ? `AI FIXING (${order.aiStage})`
-                            : isConnected
-                            ? "REPO TERHUBUNG SEMENTARA"
-                            : "ORDER BARU"}
-                        </Badge>
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-2.5">
+                        <Skeleton className="h-5 w-16" />
+                        <Skeleton className="h-5 w-32" />
+                        <Skeleton className="h-5 w-16 rounded-[4px]" />
+                        <Skeleton className="h-5 w-28 rounded-full" />
                       </div>
-                      <div className="flex items-center gap-3 text-[11px] text-[#78716C] font-mono">
-                        <span className="flex items-center gap-1">
-                          <FolderGit2 className="size-3" /> {order.repoUrl}
-                        </span>
-                        <span>•</span>
-                        <span>{order.packageType}</span>
-                        <span>•</span>
-                        <span>{order.clientEmail}</span>
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-3.5 w-36" />
+                        <Skeleton className="h-3.5 w-24" />
+                        <Skeleton className="h-3.5 w-40" />
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[11px] font-mono text-[#78716C] flex items-center gap-1">
-                        <Clock className="size-3" /> Retensi: {order.retentionExpires}
-                      </span>
-                    </div>
+                    <Skeleton className="h-4 w-32" />
                   </div>
                 </CardHeader>
-
                 <CardContent className="p-5 space-y-4">
-                  <div>
-                    <span className="text-[11px] uppercase font-semibold text-[#78716C] tracking-wider block mb-1">
-                      Deskripsi Masalah / Bug Report:
-                    </span>
-                    <p className="text-xs text-[#1C1917] font-medium leading-relaxed bg-[#FAF9F9] p-3 rounded-[6px] border border-[#E7E5E4]">
-                      {order.bugDescription}
-                    </p>
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-40" />
+                    <Skeleton className="h-14 w-full rounded-[6px]" />
                   </div>
-
-                  {/* Flow Action Buttons */}
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-2 border-t border-[#E7E5E4]">
-                    <div className="text-xs text-[#78716C] flex items-center gap-2">
-                      {isClosed ? (
-                        <span className="text-stone-500 font-mono text-[11px] flex items-center gap-1">
-                          <CheckCircle2 className="size-3.5 text-stone-400" /> Akses GitHub telah dicabut. Zero source code tersisa.
-                        </span>
-                      ) : isReview ? (
-                        <span className="text-emerald-700 font-medium text-xs flex items-center gap-1">
-                          <CheckCircle2 className="size-3.5" /> Patch siap diserahkan melalui PR atau ZIP.
-                        </span>
-                      ) : (
-                        <span className="text-[#78716C] text-xs">
-                          Isolated Workspace: {order.branchName}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {/* Step 1: Hubungkan Repo */}
-                      {isCreated && (
-                        <Button
-                          variant="default"
-                          size="sm"
-                          className="text-xs"
-                          onClick={() => handleConnectTemporaryRepo(order.id)}
-                        >
-                          <GitBranch className="size-3.5 mr-1" /> Hubungkan Repo Sementara
-                        </Button>
-                      )}
-
-                      {/* Step 2: Jalankan AI Pipeline */}
-                      {isConnected && (
-                        <Button
-                          variant="default"
-                          size="sm"
-                          className="text-xs"
-                          onClick={() => handleStartAIFixing(order.id)}
-                        >
-                          <Bot className="size-3.5 mr-1" /> Jalankan AI Fixing (4 Stage)
-                        </Button>
-                      )}
-
-                      {/* Step 3: Hasil & Review Client */}
-                      {isReview && (
-                        <>
-                          {order.prUrl && (
-                            <a href={order.prUrl} target="_blank" rel="noopener noreferrer">
-                              <Button variant="outline" size="sm" className="text-xs">
-                                <ExternalLink className="size-3.5 mr-1" /> Buka Pull Request
-                              </Button>
-                            </a>
-                          )}
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="text-xs"
-                            onClick={() => handleDownloadPatchZip(order)}
-                          >
-                            <Download className="size-3.5 mr-1" /> Unduh Patch ZIP
-                          </Button>
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="text-xs bg-stone-900 text-white hover:bg-black"
-                            onClick={() => setActiveOrderAction(order)}
-                          >
-                            <Trash2 className="size-3.5 mr-1 text-rose-400" /> Tutup Job & Cabut Akses
-                          </Button>
-                        </>
-                      )}
-
-                      {/* Step 4: Closed */}
-                      {isClosed && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs opacity-60"
-                          disabled
-                        >
-                          <Archive className="size-3.5 mr-1" /> Arsip Selesai
-                        </Button>
-                      )}
-                    </div>
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-8 w-44 rounded-[6px]" />
                   </div>
                 </CardContent>
               </Card>
-            );
-          })}
+            ))
+          ) : orders.length === 0 ? (
+            // Empty State jika belum ada order
+            <div className="py-16 px-4 text-center rounded-[8px] bg-[#FAF9F9] border border-dashed border-[#E7E5E4] space-y-3">
+              <div className="size-12 rounded-full bg-white border border-[#E7E5E4] flex items-center justify-center mx-auto text-[#78716C] shadow-2xs">
+                <Inbox className="size-6 text-[#881337]" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-semibold text-[#1C1917]">Belum ada Client Orders</h3>
+                <p className="text-xs text-[#78716C] max-w-md mx-auto">
+                  Belum ada pesanan perbaikan bug dari klien. Klik tombol <b>Order Baru Client</b> di kanan atas untuk mendaftarkan tiket bug dan menghubungkan repository.
+                </p>
+              </div>
+              <Button
+                variant="default"
+                size="sm"
+                className="text-xs mt-2"
+                onClick={() => setIsNewOrderModalOpen(true)}
+              >
+                Buat Order Baru
+              </Button>
+            </div>
+          ) : (
+            orders.map((order) => {
+              const isClosed = order.status === "job_closed";
+              const isReview = order.status === "client_review";
+              const isFixing = order.status === "ai_fixing";
+              const isConnected = order.status === "repo_connected";
+              const isCreated = order.status === "order_created";
+
+              return (
+                <Card
+                  key={order.id}
+                  className={`transition-all ${
+                    isClosed
+                      ? "opacity-75 bg-[#FAF9F9]"
+                      : "hover:border-[#D6D3D1] hover:shadow-2xs"
+                  }`}
+                >
+                  <CardHeader className="bg-[#FAF9F9] border-b border-[#E7E5E4] pb-3">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <span className="font-mono text-xs font-bold text-[#881337]">
+                            {order.id}
+                          </span>
+                          <span className="text-sm font-semibold text-[#1C1917]">
+                            {order.clientName}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-[4px] bg-rose-50 text-[#881337] font-mono font-bold text-xs border border-[#FECDD3]">
+                            {order.feeAmount}
+                          </span>
+                          <Badge
+                            variant={
+                              isClosed
+                                ? "secondary"
+                                : isReview
+                                ? "completed"
+                                : isFixing
+                                ? "fixing"
+                                : isConnected
+                                ? "testing"
+                                : "outline"
+                            }
+                            className="text-[10px]"
+                          >
+                            {isClosed
+                              ? "JOB DITUTUP (PURGED)"
+                              : isReview
+                              ? "MENUNGGU REVIEW CLIENT"
+                              : isFixing
+                              ? `AI FIXING (${order.aiStage || "Processing"})`
+                              : isConnected
+                              ? "REPO TERHUBUNG SEMENTARA"
+                              : "ORDER BARU"}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-3 text-[11px] text-[#78716C] font-mono">
+                          <span className="flex items-center gap-1">
+                            <FolderGit2 className="size-3" /> {order.repoUrl}
+                          </span>
+                          <span>•</span>
+                          <span>{order.packageType}</span>
+                          <span>•</span>
+                          <span>{order.clientEmail}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[11px] font-mono text-[#78716C] flex items-center gap-1">
+                          <Clock className="size-3" /> Retensi: {order.retentionExpires}
+                        </span>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="p-5 space-y-4">
+                    <div>
+                      <span className="text-[11px] uppercase font-semibold text-[#78716C] tracking-wider block mb-1">
+                        Deskripsi Masalah / Bug Report:
+                      </span>
+                      <p className="text-xs text-[#1C1917] font-medium leading-relaxed bg-[#FAF9F9] p-3 rounded-[6px] border border-[#E7E5E4]">
+                        {order.bugDescription}
+                      </p>
+                    </div>
+
+                    {/* Flow Action Buttons */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-2 border-t border-[#E7E5E4]">
+                      <div className="text-xs text-[#78716C] flex items-center gap-2">
+                        {isClosed ? (
+                          <span className="text-stone-500 font-mono text-[11px] flex items-center gap-1">
+                            <CheckCircle2 className="size-3.5 text-stone-400" /> Akses GitHub telah dicabut. Zero source code tersisa.
+                          </span>
+                        ) : isReview ? (
+                          <span className="text-emerald-700 font-medium text-xs flex items-center gap-1">
+                            <CheckCircle2 className="size-3.5" /> Patch siap diserahkan melalui PR atau ZIP.
+                          </span>
+                        ) : (
+                          <span className="text-[#78716C] text-xs">
+                            Isolated Workspace: {order.branchName}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* Step 1: Hubungkan Repo */}
+                        {isCreated && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => handleConnectTemporaryRepo(order.id)}
+                          >
+                            <GitBranch className="size-3.5 mr-1" /> Hubungkan Repo Sementara
+                          </Button>
+                        )}
+
+                        {/* Step 2: Jalankan AI Pipeline */}
+                        {isConnected && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => handleStartAIFixing(order.id)}
+                          >
+                            <Bot className="size-3.5 mr-1" /> Jalankan AI Fixing (4 Stage)
+                          </Button>
+                        )}
+
+                        {/* Step 3: Hasil & Review Client */}
+                        {isReview && (
+                          <>
+                            {order.prUrl && (
+                              <a href={order.prUrl} target="_blank" rel="noopener noreferrer">
+                                <Button variant="outline" size="sm" className="text-xs">
+                                  <ExternalLink className="size-3.5 mr-1" /> Buka Pull Request
+                                </Button>
+                              </a>
+                            )}
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="text-xs"
+                              onClick={() => handleDownloadPatchZip(order)}
+                            >
+                              <Download className="size-3.5 mr-1" /> Unduh Patch ZIP
+                            </Button>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="text-xs bg-stone-900 text-white hover:bg-black"
+                              onClick={() => setActiveOrderAction(order)}
+                            >
+                              <Trash2 className="size-3.5 mr-1 text-rose-400" /> Tutup Job & Cabut Akses
+                            </Button>
+                          </>
+                        )}
+
+                        {/* Step 4: Closed */}
+                        {isClosed && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs opacity-60"
+                            disabled
+                          >
+                            <Archive className="size-3.5 mr-1" /> Arsip Selesai
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
         </div>
       </div>
 
