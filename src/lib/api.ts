@@ -52,6 +52,42 @@ export const workerApi = {
       pendingReviewsCount: number;
     }>("/api/dashboard"),
 
+  // Analytics
+  getAnalytics: (timeRange = "7d") =>
+    fetchJson<{
+      summary: {
+        totalIncoming: number;
+        totalCompleted: number;
+        totalFailed: number;
+        completionRate: string;
+        failureRate: string;
+        timeRange: string;
+      };
+      lineChart: {
+        labels: string[];
+        incoming: number[];
+        completed: number[];
+        failed: number[];
+      };
+      barChart: {
+        labels: string[];
+        completed: number[];
+        failed: number[];
+      };
+      doughnut: {
+        labels: string[];
+        data: number[];
+      };
+      recentLogs: {
+        id: string;
+        timestamp: string;
+        agent: string;
+        repo: string;
+        action: string;
+        type: string;
+      }[];
+    }>(`/api/analytics?timeRange=${timeRange}`),
+
   // Metrics
   getMetrics: () =>
     fetchJson<{
