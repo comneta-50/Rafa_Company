@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Header } from "@/components/layout/header";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AttachJobModal } from "@/components/jobs/attach-job-modal";
 import {
   Dialog,
   DialogContent,
@@ -51,20 +52,29 @@ export default function DashboardPage() {
   const [promptInput, setPromptInput] = useState("");
   const [jobs, setJobs] = useState<any[]>([]);
   const [agents, setAgents] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [metrics, setMetrics] = useState<DashboardMetric | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [inspectJob, setInspectJob] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAttachModalOpen, setIsAttachModalOpen] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
-    workerApi
-      .getDashboardData()
-      .then((data) => {
-        setJobs(data.recentJobs || []);
-        setAgents(data.agentsFleet || []);
-        if (data.metrics) {
-          setMetrics(data.metrics);
+    Promise.all([
+      workerApi.getDashboardData().catch(() => null),
+      workerApi.getOrders().catch(() => []),
+    ])
+      .then(([dashboardData, ordersData]) => {
+        if (dashboardData) {
+          setJobs(dashboardData.recentJobs || []);
+          setAgents(dashboardData.agentsFleet || []);
+          if (dashboardData.metrics) {
+            setMetrics(dashboardData.metrics);
+          }
+        }
+        if (Array.isArray(ordersData)) {
+          setOrders(ordersData);
         }
       })
       .catch((err) => {
@@ -110,9 +120,30 @@ export default function DashboardPage() {
     setInspectJob(job);
   };
 
+  const handleJobAttached = (orderId: string, agentName: string) => {
+    workerApi
+      .createJob({
+        orderId,
+        agent: agentName,
+        title: `Job attached from order ${orderId}`,
+      })
+      .then((res) => {
+        if (res && res.job) {
+          setJobs((prev) => [res.job, ...prev]);
+        }
+        toast.success(`Job berhasil di-attach ke ${agentName}!`);
+      })
+      .catch((err) => {
+        toast.error(`Gagal attach job: ${err.message}`);
+      });
+  };
+
   return (
     <>
-      <Header />
+      <Header
+        actionLabel="Attach Job"
+        onAction={() => setIsAttachModalOpen(true)}
+      />
       <div className="max-w-[1440px] w-full mx-auto p-7 space-y-6">
         {/* Welcome & Command Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E7E5E4] pb-6">
@@ -527,6 +558,24 @@ export default function DashboardPage() {
           </DialogContent>
         )}
       </Dialog>
+      {/* Modal Attach Job */}
+      <AttachJobModal
+        open={isAttachModalOpen}
+        onOpenChange={setIsAttachModalOpen}
+        orders={orders.map((o) => ({
+          id: o.id,
+          clientName: o.clientName,
+          title: o.bugDescription || o.title || `Order ${o.id}`,
+          repoUrl: o.repoUrl,
+          feeAmount: o.feeAmount,
+        }))}
+        agents={agents.map((a) => ({
+          name: a.name,
+          role: a.role,
+          status: a.status,
+        }))}
+        onAttached={handleJobAttached}
+      />
     </>
   );
 }
