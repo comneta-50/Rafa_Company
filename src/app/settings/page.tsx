@@ -10,27 +10,43 @@ import {
   Cpu,
   Sliders,
   Check,
+  RotateCw,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
+  const [workspaceName, setWorkspaceName] = useState("RAFA Company");
   const [apiKey, setApiKey] = useState("sk-ant-api03-92f8a1...491b");
   const [neuronsBudget, setNeuronsBudget] = useState("100,000");
   const [autoApproveLowRisk, setAutoApproveLowRisk] = useState(true);
-  const [saved, setSaved] = useState(false);
+  const [requireQaPass, setRequireQaPass] = useState(true);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSaveAll = () => {
+    toast.success("Semua pengaturan workspace berhasil diperbarui dan disimpan!");
+  };
+
+  const handleSaveIdentity = () => {
+    toast.success(`Identitas workspace diperbarui: "${workspaceName}", kuota: ${neuronsBudget} Neurons.`);
+  };
+
+  const handleSavePolicy = () => {
+    toast.success("Kebijakan otonomi dan approval merge gate berhasil disimpan.");
+  };
+
+  const handleRotateKey = () => {
+    const newKey = `sk-ant-api03-${Math.random().toString(36).substring(2, 8)}...${Math.random().toString(36).substring(2, 6)}`;
+    setApiKey(newKey);
+    toast.success("LLM Gateway Secret Token berhasil di-rotate!");
   };
 
   return (
     <>
-      <Header actionLabel="Save All" onAction={handleSave} />
+      <Header actionLabel="Save All" onAction={handleSaveAll} />
       <div className="max-w-[1440px] w-full mx-auto p-7 space-y-6">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E7E5E4] pb-6">
@@ -42,12 +58,9 @@ export default function SettingsPage() {
               Manage organization preferences, AI agent models, API tokens, and approval thresholds.
             </p>
           </div>
-          {saved && (
-            <Badge variant="completed" className="px-3 py-1">
-              <Check className="size-3 mr-1 text-emerald-700" />
-              Settings saved successfully
-            </Badge>
-          )}
+          <Badge variant="default" className="px-3 py-1">
+            Production Cluster Active
+          </Badge>
         </div>
 
         {/* Settings Sections */}
@@ -63,7 +76,11 @@ export default function SettingsPage() {
                 <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
                   Company / Workspace Name
                 </label>
-                <Input defaultValue="RAFA Company" className="bg-[#FAF9F9]" />
+                <Input
+                  value={workspaceName}
+                  onChange={(e) => setWorkspaceName(e.target.value)}
+                  className="bg-[#FAF9F9]"
+                />
               </div>
 
               <div>
@@ -78,7 +95,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="pt-2">
-                <Button variant="default" size="sm" onClick={handleSave}>
+                <Button variant="default" size="sm" onClick={handleSaveIdentity}>
                   Save Identity
                 </Button>
               </div>
@@ -120,13 +137,14 @@ export default function SettingsPage() {
                 </div>
                 <input
                   type="checkbox"
-                  defaultChecked
+                  checked={requireQaPass}
+                  onChange={(e) => setRequireQaPass(e.target.checked)}
                   className="accent-[#881337] size-4 rounded cursor-pointer"
                 />
               </div>
 
               <div className="pt-2">
-                <Button variant="default" size="sm" onClick={handleSave}>
+                <Button variant="default" size="sm" onClick={handleSavePolicy}>
                   Save Policy
                 </Button>
               </div>
@@ -151,8 +169,8 @@ export default function SettingsPage() {
                     onChange={(e) => setApiKey(e.target.value)}
                     className="bg-[#FAF9F9] font-mono flex-1"
                   />
-                  <Button variant="outline" size="sm">
-                    Rotate Key
+                  <Button variant="outline" size="sm" onClick={handleRotateKey}>
+                    <RotateCw className="size-3.5 mr-1" /> Rotate Key
                   </Button>
                 </div>
                 <span className="text-[11px] text-[#78716C] mt-1 block">

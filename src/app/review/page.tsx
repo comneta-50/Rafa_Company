@@ -6,17 +6,24 @@ import {
   Check,
   X,
   FileCode,
-  GitPullRequest,
   AlertCircle,
-  Clock,
   ExternalLink,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
-const mockReviews = [
+const initialReviews = [
   {
     id: "REV-104",
     title: "Fix Token Expiration & Race Condition in Auth Guard",
@@ -62,15 +69,34 @@ const mockReviews = [
 ];
 
 export default function ReviewPage() {
-  const [reviews, setReviews] = useState(mockReviews);
+  const [reviews, setReviews] = useState(initialReviews);
+  const [diffModalReview, setDiffModalReview] = useState<(typeof initialReviews)[0] | null>(null);
 
-  const handleApprove = (id: string) => {
-    setReviews(reviews.filter((r) => r.id !== id));
+  const handleApprove = (id: string, title: string) => {
+    setReviews((prev) => prev.filter((r) => r.id !== id));
+    toast.success(`Disetujui & Di-merge: ${title}`);
+    setDiffModalReview(null);
+  };
+
+  const handleReject = (id: string, title: string) => {
+    setReviews((prev) => prev.filter((r) => r.id !== id));
+    toast.error(`Perubahan Ditolak: ${title}`);
+    setDiffModalReview(null);
+  };
+
+  const handleBatchReview = () => {
+    if (reviews.length === 0) {
+      toast.info("Tidak ada review yang tertunda.");
+      return;
+    }
+    const count = reviews.length;
+    setReviews([]);
+    toast.success(`Batch Approval: Berhasil menyetujui ${count} pull requests sekaligus!`);
   };
 
   return (
     <>
-      <Header actionLabel="Review Batch" />
+      <Header actionLabel="Review Batch" onAction={handleBatchReview} />
       <div className="max-w-[1440px] w-full mx-auto p-7 space-y-6">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E7E5E4] pb-6">
@@ -96,7 +122,7 @@ export default function ReviewPage() {
               <Check className="size-8 text-emerald-600 mx-auto mb-2" />
               <p className="text-sm font-semibold text-[#1C1917]">All caught up!</p>
               <p className="text-xs text-[#78716C] mt-1">
-                There are no pending code reviews requiring human approval at this moment.
+                Semua patch AI telah ditinjau dan disetujui.
               </p>
             </Card>
           ) : (
@@ -135,10 +161,18 @@ export default function ReviewPage() {
 
                     <div className="flex items-center gap-2">
                       <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => setDiffModalReview(rev)}
+                      >
+                        <FileCode className="size-3.5 mr-1" /> View Diff
+                      </Button>
+                      <Button
                         variant="outline"
                         size="sm"
                         className="text-xs"
-                        onClick={() => handleApprove(rev.id)}
+                        onClick={() => handleReject(rev.id, rev.title)}
                       >
                         <X className="size-3.5 mr-1 text-rose-700" /> Reject
                       </Button>
@@ -146,7 +180,7 @@ export default function ReviewPage() {
                         variant="default"
                         size="sm"
                         className="text-xs"
-                        onClick={() => handleApprove(rev.id)}
+                        onClick={() => handleApprove(rev.id, rev.title)}
                       >
                         <Check className="size-3.5 mr-1" /> Approve & Merge
                       </Button>
@@ -158,6 +192,51 @@ export default function ReviewPage() {
           )}
         </div>
       </div>
+
+      {/* Modal Dialog View Code Diff */}
+      <Dialog open={!!diffModalReview} onOpenChange={(open) => !open && setDiffModalReview(null)}>
+        {diffModalReview && (
+          <DialogContent className="max-w-2xl rounded-[8px] p-6 bg-white border border-[#E7E5E4]">
+            <DialogHeader>
+              <DialogTitle className="text-base font-semibold text-[#1C1917]">
+                Differential Patch: {diffModalReview.id}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-[#78716C]">
+                {diffModalReview.repo} • {diffModalReview.branch}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="p-4 bg-[#1C1917] text-white font-mono text-xs rounded-[6px] max-h-72 overflow-y-auto space-y-1">
+              <div className="text-[#78716C]">--- a/src/middleware.ts</div>
+              <div className="text-[#78716C]">+++ b/src/middleware.ts</div>
+              <div className="text-blue-400">@@ -42,7 +42,9 @@ export async function middleware(req)</div>
+              <div className="text-stone-300">   const token = req.cookies.get(&quot;session&quot;)</div>
+              <div className="bg-rose-950/50 text-rose-300 px-1 py-0.5 rounded">-  if (isExpired(token)) refreshToken()</div>
+              <div className="bg-emerald-950/60 text-emerald-300 px-1 py-0.5 rounded">+  if (isExpired(token)) &#123;</div>
+              <div className="bg-emerald-950/60 text-emerald-300 px-1 py-0.5 rounded">+    await mutexLock.acquire(&quot;auth-refresh&quot;)</div>
+              <div className="bg-emerald-950/60 text-emerald-300 px-1 py-0.5 rounded">+    await refreshTokenSafe()</div>
+              <div className="bg-emerald-950/60 text-emerald-300 px-1 py-0.5 rounded">+  &#125;</div>
+            </div>
+
+            <DialogFooter className="pt-3 flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleReject(diffModalReview.id, diffModalReview.title)}
+              >
+                Reject Patch
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => handleApprove(diffModalReview.id, diffModalReview.title)}
+              >
+                Approve & Merge
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        )}
+      </Dialog>
     </>
   );
 }

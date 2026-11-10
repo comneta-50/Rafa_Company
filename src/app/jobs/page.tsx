@@ -3,21 +3,28 @@
 import React, { useState } from "react";
 import {
   Terminal,
-  Plus,
-  Play,
-  RotateCw,
   FolderGit2,
-  Clock,
   Cpu,
-  CheckCircle2,
-  Filter,
+  Eye,
+  FileText,
+  RotateCw,
+  Plus,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
-const allJobs = [
+const initialJobs = [
   {
     id: "JOB-4092",
     repo: "comneta-50/site-ai-company",
@@ -28,6 +35,12 @@ const allJobs = [
     statusLabel: "Fixing",
     time: "2m ago",
     progress: 68,
+    logs: [
+      "Cloning repo: comneta-50/site-ai-company",
+      "Scanning AST trees in src/middleware.ts",
+      "Found potential race condition in token renewal loop",
+      "Generating synchronized mutex lock patch...",
+    ],
   },
   {
     id: "JOB-4089",
@@ -39,6 +52,12 @@ const allJobs = [
     statusLabel: "Testing",
     time: "14m ago",
     progress: 92,
+    logs: [
+      "Analyzing slow query telemetry",
+      "Tuned max pool connection from 10 to 35",
+      "Running load test simulation: 2000 rps",
+      "P99 latency down from 420ms to 48ms",
+    ],
   },
   {
     id: "JOB-4085",
@@ -50,6 +69,11 @@ const allJobs = [
     statusLabel: "Review",
     time: "48m ago",
     progress: 100,
+    logs: [
+      "Detected window !== undefined mismatch during SSR pass",
+      "Applied useSyncExternalStore wrapper for client localization",
+      "Passed all Jest unit tests",
+    ],
   },
   {
     id: "JOB-4081",
@@ -61,6 +85,11 @@ const allJobs = [
     statusLabel: "Completed",
     time: "2h ago",
     progress: 100,
+    logs: [
+      "Identified memory spike in batch consumer buffer",
+      "Applied backpressure stream piping",
+      "Stress test completed: 0 buffer overflow drops",
+    ],
   },
   {
     id: "JOB-4078",
@@ -72,6 +101,11 @@ const allJobs = [
     statusLabel: "Completed",
     time: "4h ago",
     progress: 100,
+    logs: [
+      "Fetched failed event queue from DLQ",
+      "Validated HMAC-SHA256 signature algorithm",
+      "140 events successfully replayed",
+    ],
   },
   {
     id: "JOB-4075",
@@ -83,20 +117,40 @@ const allJobs = [
     statusLabel: "Failed",
     time: "6h ago",
     progress: 45,
+    logs: [
+      "Triggering integration test against Stripe sandbox",
+      "Error: API timeout 10000ms exceeded on remote endpoint",
+      "Pipeline halted safely without mutating production",
+    ],
   },
 ];
 
 export default function JobsPage() {
   const [filter, setFilter] = useState("all");
+  const [jobsList, setJobsList] = useState(initialJobs);
+  const [inspectJob, setInspectJob] = useState<(typeof initialJobs)[0] | null>(null);
+  const [logModalJob, setLogModalJob] = useState<(typeof initialJobs)[0] | null>(null);
 
-  const filtered = allJobs.filter((j) => {
+  const filtered = jobsList.filter((j) => {
     if (filter === "all") return true;
     return j.status === filter;
   });
 
+  const handleRetryJob = (jobId: string) => {
+    setJobsList((prev) =>
+      prev.map((j) =>
+        j.id === jobId
+          ? { ...j, status: "fixing", statusLabel: "Fixing", progress: 15 }
+          : j
+      )
+    );
+    toast.success(`Job ${jobId} di-trigger ulang dan kembali masuk ke antrean eksekusi.`);
+    setInspectJob(null);
+  };
+
   return (
     <>
-      <Header actionLabel="New Job" />
+      <Header />
       <div className="max-w-[1440px] w-full mx-auto p-7 space-y-6">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E7E5E4] pb-6">
@@ -112,28 +166,40 @@ export default function JobsPage() {
             <Button
               variant={filter === "all" ? "default" : "outline"}
               size="sm"
-              onClick={() => setFilter("all")}
+              onClick={() => {
+                setFilter("all");
+                toast.info("Menampilkan semua jobs");
+              }}
             >
               All Jobs
             </Button>
             <Button
               variant={filter === "fixing" ? "default" : "outline"}
               size="sm"
-              onClick={() => setFilter("fixing")}
+              onClick={() => {
+                setFilter("fixing");
+                toast.info("Filter: Status Fixing");
+              }}
             >
               Fixing
             </Button>
             <Button
               variant={filter === "testing" ? "default" : "outline"}
               size="sm"
-              onClick={() => setFilter("testing")}
+              onClick={() => {
+                setFilter("testing");
+                toast.info("Filter: Status Testing");
+              }}
             >
               Testing
             </Button>
             <Button
               variant={filter === "completed" ? "default" : "outline"}
               size="sm"
-              onClick={() => setFilter("completed")}
+              onClick={() => {
+                setFilter("completed");
+                toast.info("Filter: Status Completed");
+              }}
             >
               Completed
             </Button>
@@ -192,24 +258,34 @@ export default function JobsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 shrink-0 self-end md:self-center">
+                <div className="flex items-center gap-3 shrink-0 self-end md:self-center">
                   <div className="w-28 text-right hidden sm:block">
                     <div className="text-[11px] font-mono text-[#78716C] mb-1">
                       {job.progress}%
                     </div>
                     <div className="w-full bg-[#E7E5E4] rounded-full h-1.5 overflow-hidden">
                       <div
-                        className="bg-[#881337] h-full rounded-full"
+                        className="bg-[#881337] h-full rounded-full transition-all duration-300"
                         style={{ width: `${job.progress}%` }}
                       />
                     </div>
                   </div>
 
-                  <Button variant="secondary" size="sm" className="text-xs">
-                    Inspect
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => setInspectJob(job)}
+                  >
+                    <Eye className="size-3 mr-1" /> Inspect
                   </Button>
-                  <Button variant="outline" size="sm" className="text-xs">
-                    Logs
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => setLogModalJob(job)}
+                  >
+                    <FileText className="size-3 mr-1" /> Logs
                   </Button>
                 </div>
               </div>
@@ -217,6 +293,94 @@ export default function JobsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal Dialog Inspect Job */}
+      <Dialog open={!!inspectJob} onOpenChange={(open) => !open && setInspectJob(null)}>
+        {inspectJob && (
+          <DialogContent className="max-w-md rounded-[8px] p-6 bg-white border border-[#E7E5E4]">
+            <DialogHeader>
+              <DialogTitle className="text-base font-semibold text-[#1C1917]">
+                Detail Job {inspectJob.id}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-[#78716C]">
+                {inspectJob.repo} • Branch: {inspectJob.branch}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 pt-2 text-xs">
+              <div className="p-3 bg-[#FAF9F9] rounded-[6px] border border-[#E7E5E4] space-y-1">
+                <span className="text-[#78716C] block text-[11px]">Tugas:</span>
+                <p className="font-semibold text-[#1C1917]">{inspectJob.title}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-2.5 bg-[#FAF9F9] rounded-[6px] border border-[#E7E5E4]">
+                  <span className="text-[#78716C] block text-[10px]">Agen Penanggung Jawab</span>
+                  <span className="font-semibold text-[#881337]">{inspectJob.agent}</span>
+                </div>
+                <div className="p-2.5 bg-[#FAF9F9] rounded-[6px] border border-[#E7E5E4]">
+                  <span className="text-[#78716C] block text-[10px]">Progress Selesai</span>
+                  <span className="font-semibold text-emerald-700">{inspectJob.progress}%</span>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="pt-3 flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setInspectJob(null)}
+              >
+                Tutup
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => handleRetryJob(inspectJob.id)}
+              >
+                <RotateCw className="size-3.5 mr-1" /> Trigger Ulang
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        )}
+      </Dialog>
+
+      {/* Modal Dialog Log Output */}
+      <Dialog open={!!logModalJob} onOpenChange={(open) => !open && setLogModalJob(null)}>
+        {logModalJob && (
+          <DialogContent className="max-w-lg rounded-[8px] p-6 bg-white border border-[#E7E5E4]">
+            <DialogHeader>
+              <DialogTitle className="text-base font-semibold text-[#1C1917]">
+                Live Terminal Logs: {logModalJob.id}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-[#78716C]">
+                Output eksekusi container worker untuk {logModalJob.repo}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="p-4 bg-[#1C1917] text-white font-mono text-xs rounded-[6px] space-y-1.5 max-h-60 overflow-y-auto">
+              {logModalJob.logs.map((line, idx) => (
+                <div key={idx} className="flex gap-2">
+                  <span className="text-[#78716C] select-none">{idx + 1}</span>
+                  <span className={idx === logModalJob.logs.length - 1 ? "text-emerald-400" : "text-stone-300"}>
+                    {line}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <DialogFooter className="pt-3 flex justify-end">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setLogModalJob(null)}
+              >
+                Selesai
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        )}
+      </Dialog>
     </>
   );
 }

@@ -5,19 +5,27 @@ import {
   GitBranch,
   FolderGit2,
   CheckCircle2,
-  ExternalLink,
   RefreshCw,
   Plus,
-  GitCommit,
-  GitPullRequest,
-  Lock,
+  Settings2,
+  Scan,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
-const mockRepos = [
+const initialRepos = [
   {
     name: "comneta-50/Rafa_Company",
     description: "Official workspace and AI orchestration dashboard",
@@ -57,11 +65,52 @@ const mockRepos = [
 ];
 
 export default function GitHubPage() {
-  const [repos] = useState(mockRepos);
+  const [repos, setRepos] = useState(initialRepos);
+  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
+  const [newRepoName, setNewRepoName] = useState("");
+  const [newRepoDesc, setNewRepoDesc] = useState("");
+  const [activeSettingsRepo, setActiveSettingsRepo] = useState<(typeof initialRepos)[0] | null>(null);
+
+  const handleConnectRepo = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRepoName.trim()) {
+      toast.error("Silakan masukkan nama repositori GitHub (contoh: org/repo).");
+      return;
+    }
+    const newRepo = {
+      name: newRepoName,
+      description: newRepoDesc || "Connected GitHub Repository",
+      stars: 1,
+      defaultBranch: "main",
+      syncedAt: "Just now",
+      status: "Synced",
+      autoFix: true,
+    };
+    setRepos([...repos, newRepo]);
+    toast.success(`Repositori "${newRepoName}" berhasil dihubungkan!`);
+    setNewRepoName("");
+    setNewRepoDesc("");
+    setIsConnectModalOpen(false);
+  };
+
+  const handleTriggerScan = (repoName: string) => {
+    toast.loading(`Memulai scan AST pada ${repoName}...`, { id: repoName });
+    setTimeout(() => {
+      toast.success(`Scan selesai untuk ${repoName}. 0 celah keamanan kritis.`, { id: repoName });
+    }, 1500);
+  };
+
+  const handleToggleAutoFix = (repoName: string) => {
+    setRepos((prev) =>
+      prev.map((r) => (r.name === repoName ? { ...r, autoFix: !r.autoFix } : r))
+    );
+    toast.success(`Pengaturan AutoFix untuk ${repoName} diperbarui.`);
+    setActiveSettingsRepo(null);
+  };
 
   return (
     <>
-      <Header actionLabel="Connect Repo" />
+      <Header actionLabel="Connect Repo" onAction={() => setIsConnectModalOpen(true)} />
       <div className="max-w-[1440px] w-full mx-auto p-7 space-y-6">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E7E5E4] pb-6">
@@ -106,17 +155,27 @@ export default function GitHubPage() {
                     <GitBranch className="size-3" /> {repo.defaultBranch}
                   </span>
                   <span>Synced {repo.syncedAt}</span>
-                  <span className={repo.autoFix ? "text-emerald-700" : "text-[#78716C]"}>
+                  <span className={repo.autoFix ? "text-emerald-700 font-semibold" : "text-[#78716C]"}>
                     AutoFix: {repo.autoFix ? "Enabled" : "Disabled"}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2 pt-1">
-                  <Button variant="secondary" size="sm" className="flex-1 text-xs">
-                    Settings
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="flex-1 text-xs"
+                    onClick={() => setActiveSettingsRepo(repo)}
+                  >
+                    <Settings2 className="size-3.5 mr-1" /> Settings
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1 text-xs">
-                    Trigger Scan
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 text-xs"
+                    onClick={() => handleTriggerScan(repo.name)}
+                  >
+                    <Scan className="size-3.5 mr-1" /> Trigger Scan
                   </Button>
                 </div>
               </CardContent>
@@ -124,6 +183,104 @@ export default function GitHubPage() {
           ))}
         </div>
       </div>
+
+      {/* Modal Dialog Connect Repo */}
+      <Dialog open={isConnectModalOpen} onOpenChange={setIsConnectModalOpen}>
+        <DialogContent className="max-w-md rounded-[8px] p-6 bg-white border border-[#E7E5E4]">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold text-[#1C1917]">
+              Hubungkan Repositori Baru
+            </DialogTitle>
+            <DialogDescription className="text-xs text-[#78716C]">
+              Tautkan repositori GitHub untuk memicu agen AI secara otomatis saat push/PR.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleConnectRepo} className="space-y-4 pt-2">
+            <div>
+              <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+                Nama Repositori (owner/repo)
+              </label>
+              <Input
+                value={newRepoName}
+                onChange={(e) => setNewRepoName(e.target.value)}
+                placeholder="Contoh: comneta-50/payment-gateway"
+                className="bg-[#FAF9F9] text-xs h-9 rounded-[6px]"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+                Deskripsi
+              </label>
+              <Input
+                value={newRepoDesc}
+                onChange={(e) => setNewRepoDesc(e.target.value)}
+                placeholder="Contoh: Microservice integrasi pembayaran"
+                className="bg-[#FAF9F9] text-xs h-9 rounded-[6px]"
+              />
+            </div>
+
+            <DialogFooter className="pt-2 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsConnectModalOpen(false)}
+              >
+                Batal
+              </Button>
+              <Button type="submit" variant="default" size="sm">
+                Hubungkan Repo
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Dialog Repo Settings */}
+      <Dialog open={!!activeSettingsRepo} onOpenChange={(open) => !open && setActiveSettingsRepo(null)}>
+        {activeSettingsRepo && (
+          <DialogContent className="max-w-md rounded-[8px] p-6 bg-white border border-[#E7E5E4]">
+            <DialogHeader>
+              <DialogTitle className="text-base font-semibold text-[#1C1917]">
+                Pengaturan {activeSettingsRepo.name}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-[#78716C]">
+                Konfigurasi bot webhook dan otorisasi automasi patch.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 pt-2 text-xs">
+              <div className="p-3 bg-[#FAF9F9] border border-[#E7E5E4] rounded-[6px] flex items-center justify-between">
+                <div>
+                  <span className="font-semibold text-[#1C1917] block">AutoFix Generator</span>
+                  <span className="text-[11px] text-[#78716C]">
+                    Izinkan agen membuat PR draft otomatis saat build CI gagal.
+                  </span>
+                </div>
+                <Button
+                  size="sm"
+                  variant={activeSettingsRepo.autoFix ? "default" : "outline"}
+                  onClick={() => handleToggleAutoFix(activeSettingsRepo.name)}
+                >
+                  {activeSettingsRepo.autoFix ? "Aktif" : "Nonaktif"}
+                </Button>
+              </div>
+            </div>
+
+            <DialogFooter className="pt-3 flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveSettingsRepo(null)}
+              >
+                Tutup
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        )}
+      </Dialog>
     </>
   );
 }

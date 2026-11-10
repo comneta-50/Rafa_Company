@@ -5,22 +5,26 @@ import {
   Bot,
   Plus,
   Play,
-  Pause,
   Settings2,
-  Cpu,
-  Zap,
-  CheckCircle2,
-  Clock,
-  Sparkles,
-  ChevronRight,
+  Check,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { mockAgents } from "@/components/layout/sidebar";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
-const extendedAgents = [
+const initialAgents = [
   ...mockAgents,
   {
     name: "Security Guard",
@@ -49,11 +53,48 @@ const extendedAgents = [
 ];
 
 export default function AgentsPage() {
-  const [agentsList, setAgentsList] = useState(extendedAgents);
+  const [agentsList, setAgentsList] = useState(initialAgents);
+  const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
+  const [newAgentName, setNewAgentName] = useState("");
+  const [newAgentRole, setNewAgentRole] = useState("");
+  const [activeConfigAgent, setActiveConfigAgent] = useState<(typeof initialAgents)[0] | null>(null);
+
+  const handleDeployAgent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAgentName.trim() || !newAgentRole.trim()) {
+      toast.error("Silakan isi nama dan peran agen.");
+      return;
+    }
+    const initials = newAgentName
+      .split(" ")
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+
+    const created = {
+      name: newAgentName,
+      role: newAgentRole,
+      status: "Online",
+      activeJobs: 0,
+      efficiency: "99.9%",
+      avatar: initials || "AI",
+    };
+
+    setAgentsList([...agentsList, created]);
+    toast.success(`Agent "${newAgentName}" berhasil di-deploy ke cluster!`);
+    setNewAgentName("");
+    setNewAgentRole("");
+    setIsDeployModalOpen(false);
+  };
+
+  const handleDispatchJob = (agentName: string) => {
+    toast.success(`Job instan dikirim ke ${agentName}. Agent sedang menganalisis pipeline...`);
+  };
 
   return (
     <>
-      <Header actionLabel="Deploy Agent" />
+      <Header actionLabel="Deploy Agent" onAction={() => setIsDeployModalOpen(true)} />
       <div className="max-w-[1440px] w-full mx-auto p-7 space-y-6">
         {/* Page Title */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E7E5E4] pb-6">
@@ -131,10 +172,20 @@ export default function AgentsPage() {
                   </div>
 
                   <div className="flex items-center gap-2 pt-2 border-t border-[#E7E5E4]">
-                    <Button variant="outline" size="sm" className="flex-1 text-xs">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-xs"
+                      onClick={() => setActiveConfigAgent(agent)}
+                    >
                       <Settings2 className="size-3.5 mr-1" /> Configure
                     </Button>
-                    <Button variant="default" size="sm" className="flex-1 text-xs">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="flex-1 text-xs"
+                      onClick={() => handleDispatchJob(agent.name)}
+                    >
                       Dispatch Job
                     </Button>
                   </div>
@@ -144,6 +195,115 @@ export default function AgentsPage() {
           })}
         </div>
       </div>
+
+      {/* Modal Deploy Agent Baru */}
+      <Dialog open={isDeployModalOpen} onOpenChange={setIsDeployModalOpen}>
+        <DialogContent className="max-w-md rounded-[8px] p-6 bg-white border border-[#E7E5E4]">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold text-[#1C1917]">
+              Deploy Custom AI Agent
+            </DialogTitle>
+            <DialogDescription className="text-xs text-[#78716C]">
+              Inisialisasi bot agen baru dengan persona khusus untuk codebase Anda.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleDeployAgent} className="space-y-4 pt-2">
+            <div>
+              <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+                Nama Agent
+              </label>
+              <Input
+                value={newAgentName}
+                onChange={(e) => setNewAgentName(e.target.value)}
+                placeholder="Contoh: Database Migration Auditor"
+                className="bg-[#FAF9F9] text-xs h-9 rounded-[6px]"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+                Peran & Spesialisasi
+              </label>
+              <Input
+                value={newAgentRole}
+                onChange={(e) => setNewAgentRole(e.target.value)}
+                placeholder="Contoh: Prisma schema validation & SQL performance"
+                className="bg-[#FAF9F9] text-xs h-9 rounded-[6px]"
+              />
+            </div>
+
+            <DialogFooter className="pt-2 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsDeployModalOpen(false)}
+              >
+                Batal
+              </Button>
+              <Button type="submit" variant="default" size="sm">
+                Deploy Agent
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Konfigurasi Agent */}
+      <Dialog open={!!activeConfigAgent} onOpenChange={(open) => !open && setActiveConfigAgent(null)}>
+        {activeConfigAgent && (
+          <DialogContent className="max-w-md rounded-[8px] p-6 bg-white border border-[#E7E5E4]">
+            <DialogHeader>
+              <DialogTitle className="text-base font-semibold text-[#1C1917]">
+                Konfigurasi {activeConfigAgent.name}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-[#78716C]">
+                Sesuaikan parameter inferensi LLM dan level otonomi agen.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 pt-2 text-xs">
+              <div>
+                <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+                  LLM Model Base
+                </label>
+                <select className="w-full text-xs h-9 px-3 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4]">
+                  <option>Claude 3.7 Sonnet (Reasoning)</option>
+                  <option>Gemini 2.5 Pro</option>
+                  <option>GPT-4o Developer Edition</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+                  Max Output Token per Patch
+                </label>
+                <Input defaultValue="8192" className="bg-[#FAF9F9] font-mono h-9 text-xs" />
+              </div>
+            </div>
+
+            <DialogFooter className="pt-3 flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveConfigAgent(null)}
+              >
+                Tutup
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  toast.success(`Konfigurasi untuk ${activeConfigAgent.name} disimpan!`);
+                  setActiveConfigAgent(null);
+                }}
+              >
+                Simpan Perubahan
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        )}
+      </Dialog>
     </>
   );
 }

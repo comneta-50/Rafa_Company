@@ -14,6 +14,8 @@ import {
   ChevronRight,
   Play,
   ShieldCheck,
+  Eye,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,8 +23,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Header } from "@/components/layout/header";
 import { mockAgents } from "@/components/layout/sidebar";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
-const mockJobs = [
+const initialJobs = [
   {
     id: "JOB-4092",
     repo: "comneta-50/site-ai-company",
@@ -71,6 +82,33 @@ const mockJobs = [
 
 export default function DashboardPage() {
   const [promptInput, setPromptInput] = useState("");
+  const [jobs, setJobs] = useState(initialJobs);
+  const [inspectJob, setInspectJob] = useState<(typeof initialJobs)[0] | null>(null);
+
+  const handleRunAgentFix = () => {
+    if (!promptInput.trim()) {
+      toast.error("Silakan ketik instruksi tugas atau perbaikan bug.");
+      return;
+    }
+    const newJob = {
+      id: `JOB-${Math.floor(1000 + Math.random() * 9000)}`,
+      repo: "comneta-50/site-ai-company",
+      branch: "ai-auto-patch",
+      title: promptInput,
+      agent: "AutoFix Engineer",
+      status: "fixing",
+      statusLabel: "Fixing",
+      time: "Just now",
+      progress: "15%",
+    };
+    setJobs([newJob, ...jobs]);
+    toast.success(`Agent Fix berhasil dijalankan untuk: "${promptInput}"`);
+    setPromptInput("");
+  };
+
+  const handleInspect = (job: (typeof initialJobs)[0]) => {
+    setInspectJob(job);
+  };
 
   return (
     <>
@@ -107,10 +145,16 @@ export default function DashboardPage() {
             <Input
               value={promptInput}
               onChange={(e) => setPromptInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleRunAgentFix()}
               placeholder="Give an instruction, e.g: 'Analyze branch feat/billing and fix memory leaks'..."
               className="bg-white border-[#E7E5E4] text-xs h-9.5 rounded-[6px] flex-1 text-[#1C1917] placeholder:text-[#A8A29E]"
             />
-            <Button variant="default" size="sm" className="shrink-0">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleRunAgentFix}
+              className="shrink-0"
+            >
               <Play className="size-3.5 mr-1 fill-white" /> Run Agent Fix
             </Button>
           </CardContent>
@@ -124,7 +168,9 @@ export default function DashboardPage() {
               <Terminal className="size-4 text-[#78716C]" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">12</div>
+              <div className="text-2xl font-bold font-mono tracking-tight text-[#1C1917]">
+                {jobs.length}
+              </div>
               <div className="flex items-center gap-1.5 text-xs text-[#881337] mt-1 font-medium">
                 <ArrowUpRight className="size-3" />
                 <span>4 in-progress execution</span>
@@ -182,7 +228,7 @@ export default function DashboardPage() {
               </Link>
             </CardHeader>
             <CardContent className="space-y-3 pt-2">
-              {mockJobs.map((job) => (
+              {jobs.map((job) => (
                 <div
                   key={job.id}
                   className="p-3.5 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] hover:border-[#D6D3D1] hover:bg-white transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
@@ -218,13 +264,18 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="flex items-center gap-2 sm:self-center shrink-0">
-                    <Link href={`/jobs`}>
+                    <Link href="/jobs">
                       <Button variant="secondary" size="sm" className="text-xs">
                         Details
                       </Button>
                     </Link>
-                    <Button variant="default" size="sm" className="text-xs">
-                      Inspect
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => handleInspect(job)}
+                    >
+                      <Eye className="size-3 mr-1" /> Inspect
                     </Button>
                   </div>
                 </div>
@@ -302,6 +353,55 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal Dialog Inspeksi Job */}
+      <Dialog open={!!inspectJob} onOpenChange={(open) => !open && setInspectJob(null)}>
+        {inspectJob && (
+          <DialogContent className="max-w-lg rounded-[8px] p-6 bg-white border border-[#E7E5E4]">
+            <DialogHeader>
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant="default">{inspectJob.id}</Badge>
+                <span className="text-xs text-[#78716C] font-mono">{inspectJob.repo}</span>
+              </div>
+              <DialogTitle className="text-base font-semibold text-[#1C1917]">
+                {inspectJob.title}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-[#78716C]">
+                Agent bertugas: {inspectJob.agent} • Branch: {inspectJob.branch}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 pt-3 text-xs">
+              <div className="p-3 bg-[#FAF9F9] rounded-[6px] border border-[#E7E5E4] space-y-1.5 font-mono">
+                <div className="text-[11px] text-[#78716C]">$ git fetch origin && ast-analyzer --target .</div>
+                <div className="text-emerald-700">✓ Parsed 24 AST nodes successfully</div>
+                <div className="text-[#1C1917]">✓ Generated differential patch in src/middleware.ts</div>
+                <div className="text-[#881337]">... Running test suite regression tests ({inspectJob.progress})</div>
+              </div>
+            </div>
+
+            <DialogFooter className="pt-3 flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setInspectJob(null)}
+              >
+                Tutup
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  toast.success(`Job ${inspectJob.id} berhasil di-trigger ulang!`);
+                  setInspectJob(null);
+                }}
+              >
+                Trigger Ulang
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        )}
+      </Dialog>
     </>
   );
 }

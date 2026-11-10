@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import {
   Activity,
-  Filter,
   CheckCircle2,
   AlertTriangle,
   Info,
@@ -11,11 +10,13 @@ import {
   Terminal,
   Cpu,
   ChevronDown,
+  Download,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const mockLogs = [
   {
@@ -82,9 +83,13 @@ export default function ActivityPage() {
     return log.level === selectedFilter;
   });
 
+  const handleExport = () => {
+    toast.success("Berhasil mengekspor 6 records telemetry ke format JSON/CSV.");
+  };
+
   return (
     <>
-      <Header actionLabel="Export Logs" />
+      <Header actionLabel="Export Logs" onAction={handleExport} />
       <div className="max-w-[1440px] w-full mx-auto p-7 space-y-6">
         {/* Page Title & Filters */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E7E5E4] pb-6">
@@ -100,21 +105,30 @@ export default function ActivityPage() {
             <Button
               variant={selectedFilter === "all" ? "default" : "outline"}
               size="sm"
-              onClick={() => setSelectedFilter("all")}
+              onClick={() => {
+                setSelectedFilter("all");
+                toast.info("Menampilkan semua aktivitas event");
+              }}
             >
               All Events
             </Button>
             <Button
               variant={selectedFilter === "success" ? "default" : "outline"}
               size="sm"
-              onClick={() => setSelectedFilter("success")}
+              onClick={() => {
+                setSelectedFilter("success");
+                toast.info("Filter: Menampilkan status sukses");
+              }}
             >
               Success
             </Button>
             <Button
               variant={selectedFilter === "warn" ? "default" : "outline"}
               size="sm"
-              onClick={() => setSelectedFilter("warn")}
+              onClick={() => {
+                setSelectedFilter("warn");
+                toast.info("Filter: Menampilkan peringatan / warnings");
+              }}
             >
               Warnings
             </Button>
