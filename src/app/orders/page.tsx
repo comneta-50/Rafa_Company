@@ -19,12 +19,12 @@ import {
   RefreshCw,
   FolderGit2,
   Lock,
+  DollarSign,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -34,12 +34,14 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { CreateOrderModal, ClientOrderFormData } from "@/components/orders/create-order-modal";
 
 export interface LifecycleOrder {
   id: string;
   clientName: string;
   clientEmail: string;
   packageType: string;
+  feeAmount: string;
   bugDescription: string;
   repoUrl: string;
   branchName: string;
@@ -62,6 +64,7 @@ const initialOrders: LifecycleOrder[] = [
     clientName: "PT Fintek Nusantara",
     clientEmail: "tech@finteknusantara.id",
     packageType: "Critical Bugfix (24h SLA)",
+    feeAmount: "$450.00",
     bugDescription: "Race condition saat refresh token user di middleware Next.js",
     repoUrl: "client-fintek/auth-service",
     branchName: "ai-fix/ord-781",
@@ -77,6 +80,7 @@ const initialOrders: LifecycleOrder[] = [
     clientName: "Karya Studio Global",
     clientEmail: "dev@karyastudio.com",
     packageType: "Standard Patch",
+    feeAmount: "$200.00",
     bugDescription: "PostgreSQL connection pool exhaustion ketika webhook payload melonjak",
     repoUrl: "karya-studio/core-api",
     branchName: "ai-fix/ord-780",
@@ -90,6 +94,7 @@ const initialOrders: LifecycleOrder[] = [
     clientName: "Logistik Pintar ID",
     clientEmail: "admin@logistikpintar.id",
     packageType: "Security Hotfix",
+    feeAmount: "$350.00",
     bugDescription: "Hydration mismatch & buffer overflow pada batch consumer worker",
     repoUrl: "logistik-id/tracking-worker",
     branchName: "ai-fix/ord-779",
@@ -102,6 +107,7 @@ const initialOrders: LifecycleOrder[] = [
     clientName: "Eduka Platform",
     clientEmail: "engineering@eduka.io",
     packageType: "Standard Patch",
+    feeAmount: "$180.00",
     bugDescription: "Fix Stripe Webhook signature verification mismatch",
     repoUrl: "eduka-org/billing-service",
     branchName: "ai-fix/ord-775",
@@ -116,40 +122,24 @@ const initialOrders: LifecycleOrder[] = [
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<LifecycleOrder[]>(initialOrders);
-  const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
+  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [activeOrderAction, setActiveOrderAction] = useState<LifecycleOrder | null>(null);
 
-  // Form New Order
-  const [clientName, setClientName] = useState("");
-  const [clientEmail, setClientEmail] = useState("");
-  const [repoUrl, setRepoUrl] = useState("");
-  const [bugDescription, setBugDescription] = useState("");
-
-  const handleCreateOrder = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!clientName.trim() || !repoUrl.trim() || !bugDescription.trim()) {
-      toast.error("Harap lengkapi nama client, repo target, dan deskripsi bug.");
-      return;
-    }
+  const handleOrderCreated = (data: ClientOrderFormData) => {
     const newOrder: LifecycleOrder = {
       id: `ORD-${Math.floor(700 + Math.random() * 200)}`,
-      clientName,
-      clientEmail: clientEmail || "client@company.com",
-      packageType: "Standard Bugfix",
-      bugDescription,
-      repoUrl,
+      clientName: data.clientRef,
+      clientEmail: "client@contact.com",
+      packageType: `${data.platform} (${data.contractType})`,
+      feeAmount: data.feeAmount,
+      bugDescription: data.bugDescription,
+      repoUrl: data.repoUrl.replace("https://github.com/", ""),
       branchName: `ai-fix/ord-${Math.floor(700 + Math.random() * 200)}`,
       status: "order_created",
       retentionExpires: "Menunggu koneksi repo",
       workspaceDestroyed: false,
     };
     setOrders([newOrder, ...orders]);
-    toast.success(`Order ${newOrder.id} dari ${clientName} berhasil dibuat!`);
-    setIsNewOrderOpen(false);
-    setClientName("");
-    setClientEmail("");
-    setRepoUrl("");
-    setBugDescription("");
   };
 
   // 1. Hubungkan Repo Sementara & Spawn Isolated Workspace
@@ -258,7 +248,10 @@ export default function OrdersPage() {
 
   return (
     <>
-      <Header actionLabel="Order Baru Client" onAction={() => setIsNewOrderOpen(true)} />
+      <Header
+        actionLabel="Order Baru Client"
+        onAction={() => setIsNewOrderModalOpen(true)}
+      />
       <div className="max-w-[1440px] w-full mx-auto p-7 space-y-6">
         {/* Page Title & Explanation */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E7E5E4] pb-6">
@@ -293,7 +286,7 @@ export default function OrdersPage() {
                 </span>
                 <span className="font-semibold text-[#1C1917] block">Client Order</span>
                 <span className="text-[11px] text-[#78716C] mt-0.5 block">
-                  Client mendaftar bug & menyetujui SLA tarif.
+                  Client mendaftar bug & menyetujui fee pembayaran.
                 </span>
               </div>
 
@@ -367,6 +360,9 @@ export default function OrdersPage() {
                         </span>
                         <span className="text-sm font-semibold text-[#1C1917]">
                           {order.clientName}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-[4px] bg-rose-50 text-[#881337] font-mono font-bold text-xs border border-[#FECDD3]">
+                          {order.feeAmount}
                         </span>
                         <Badge
                           variant={
@@ -514,84 +510,12 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Modal Dialog Order Baru */}
-      <Dialog open={isNewOrderOpen} onOpenChange={setIsNewOrderOpen}>
-        <DialogContent className="max-w-md rounded-[8px] p-6 bg-white border border-[#E7E5E4]">
-          <DialogHeader>
-            <DialogTitle className="text-base font-semibold text-[#1C1917]">
-              Input Order Baru Client
-            </DialogTitle>
-            <DialogDescription className="text-xs text-[#78716C]">
-              Masukkan detail client dan repositori yang akan diperbaiki sementara.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleCreateOrder} className="space-y-4 pt-2">
-            <div>
-              <label className="text-xs font-semibold text-[#1C1917] block mb-1">
-                Nama Client / Perusahaan
-              </label>
-              <Input
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                placeholder="Contoh: PT Alpha Fintech"
-                className="bg-[#FAF9F9] text-xs h-9 rounded-[6px]"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-[#1C1917] block mb-1">
-                Email Kontak Client
-              </label>
-              <Input
-                type="email"
-                value={clientEmail}
-                onChange={(e) => setClientEmail(e.target.value)}
-                placeholder="tech@alphafintech.com"
-                className="bg-[#FAF9F9] text-xs h-9 rounded-[6px]"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-[#1C1917] block mb-1">
-                Target GitHub Repository
-              </label>
-              <Input
-                value={repoUrl}
-                onChange={(e) => setRepoUrl(e.target.value)}
-                placeholder="alpha-fintech/backend-auth"
-                className="bg-[#FAF9F9] text-xs h-9 rounded-[6px]"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-[#1C1917] block mb-1">
-                Deskripsi Bug / Error
-              </label>
-              <Input
-                value={bugDescription}
-                onChange={(e) => setBugDescription(e.target.value)}
-                placeholder="Contoh: Error 500 saat refresh token timeout"
-                className="bg-[#FAF9F9] text-xs h-9 rounded-[6px]"
-              />
-            </div>
-
-            <DialogFooter className="pt-2 flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsNewOrderOpen(false)}
-              >
-                Batal
-              </Button>
-              <Button type="submit" variant="default" size="sm">
-                Buat Order
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Modal Dialog Order Baru dengan Fee Amount */}
+      <CreateOrderModal
+        open={isNewOrderModalOpen}
+        onOpenChange={setIsNewOrderModalOpen}
+        onOrderCreated={handleOrderCreated}
+      />
 
       {/* Modal Konfirmasi Tutup Job & Purge Repository */}
       <Dialog open={!!activeOrderAction} onOpenChange={(open) => !open && setActiveOrderAction(null)}>

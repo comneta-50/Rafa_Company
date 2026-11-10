@@ -1,0 +1,264 @@
+"use client";
+
+import React, { useState } from "react";
+import { UploadCloud, Check, ChevronDown, DollarSign } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+
+export interface ClientOrderFormData {
+  jobTitle: string;
+  platform: string;
+  contractType: string;
+  clientRef: string;
+  feeAmount: string;
+  bugDescription: string;
+  repoUrl: string;
+  expectedResult: string;
+  attachment?: string | null;
+}
+
+interface CreateOrderModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onOrderCreated?: (orderData: ClientOrderFormData) => void;
+}
+
+export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateOrderModalProps) {
+  const [jobTitle, setJobTitle] = useState("Fix React Login Authentication");
+  const [platform, setPlatform] = useState("Upwork");
+  const [contractType, setContractType] = useState("Fixed Price");
+  const [clientRef, setClientRef] = useState("");
+  const [feeAmount, setFeeAmount] = useState("$250.00");
+  const [bugDescription, setBugDescription] = useState(
+    "Login button does not work. API returns 401 error and users cannot access the dashboard."
+  );
+  const [repoUrl, setRepoUrl] = useState("https://github.com/client/project");
+  const [expectedResult, setExpectedResult] = useState("");
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!jobTitle.trim()) {
+      toast.error("Silakan masukkan Job Title.");
+      return;
+    }
+    if (!feeAmount.trim()) {
+      toast.error("Silakan masukkan Jumlah Fee.");
+      return;
+    }
+
+    const payload: ClientOrderFormData = {
+      jobTitle,
+      platform,
+      contractType,
+      clientRef: clientRef || "Client Direct",
+      feeAmount,
+      bugDescription,
+      repoUrl,
+      expectedResult,
+      attachment: selectedFile,
+    };
+
+    if (onOrderCreated) {
+      onOrderCreated(payload);
+    }
+
+    toast.success(`Order "${jobTitle}" senilai ${feeAmount} berhasil dibuat!`);
+    onOpenChange(false);
+  };
+
+  const handleSimulateUpload = () => {
+    setSelectedFile("error_screenshot_401.png");
+    toast.info("File lampiran 'error_screenshot_401.png' berhasil dipilih!");
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[92vw] max-w-4xl rounded-[10px] p-0 bg-white border border-[#E7E5E4] overflow-hidden shadow-2xl max-h-[92vh] flex flex-col">
+        {/* Header */}
+        <div className="px-7 py-5 border-b border-[#E7E5E4] bg-[#FAF9F9]">
+          <DialogTitle className="text-lg font-semibold tracking-tight text-[#1C1917]">
+            Create New Client Order
+          </DialogTitle>
+          <DialogDescription className="text-xs text-[#78716C] mt-0.5">
+            Pendaftaran bug fix & penagihan fee client untuk alur ephemeral repository.
+          </DialogDescription>
+        </div>
+
+        {/* Scrollable Form Body */}
+        <form onSubmit={handleSubmit} className="overflow-y-auto p-7 space-y-5 text-xs">
+          {/* Job Title */}
+          <div>
+            <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+              Job Title
+            </label>
+            <Input
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+              placeholder="e.g. Fix React Login Authentication"
+              className="bg-[#FAF9F9] h-10 text-xs rounded-[6px]"
+              required
+            />
+          </div>
+
+          {/* Platform, Contract Type & Fee Amount (3 Columns) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div>
+              <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+                Platform
+              </label>
+              <div className="relative">
+                <select
+                  value={platform}
+                  onChange={(e) => setPlatform(e.target.value)}
+                  className="w-full h-10 px-3.5 pr-8 appearance-none rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] text-xs text-[#1C1917] focus:outline-none focus:ring-2 focus:ring-[#881337]/30"
+                >
+                  <option value="Upwork">Upwork</option>
+                  <option value="Fiverr">Fiverr</option>
+                  <option value="Direct Contract">Direct Contract</option>
+                  <option value="Internal Client">Internal Client</option>
+                  <option value="Freelancer">Freelancer</option>
+                </select>
+                <ChevronDown className="size-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-[#78716C] pointer-events-none" />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+                Contract Type
+              </label>
+              <div className="relative">
+                <select
+                  value={contractType}
+                  onChange={(e) => setContractType(e.target.value)}
+                  className="w-full h-10 px-3.5 pr-8 appearance-none rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] text-xs text-[#1C1917] focus:outline-none focus:ring-2 focus:ring-[#881337]/30"
+                >
+                  <option value="Fixed Price">Fixed Price</option>
+                  <option value="Hourly">Hourly</option>
+                  <option value="Milestone">Milestone</option>
+                  <option value="Retainer">Retainer</option>
+                </select>
+                <ChevronDown className="size-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-[#78716C] pointer-events-none" />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+                Jumlah Fee (Price / Budget)
+              </label>
+              <div className="relative">
+                <DollarSign className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#78716C]" />
+                <Input
+                  value={feeAmount}
+                  onChange={(e) => setFeeAmount(e.target.value)}
+                  placeholder="$250.00 atau Rp3.500.000"
+                  className="bg-[#FAF9F9] h-10 pl-8 font-mono text-xs font-semibold text-[#881337] rounded-[6px]"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Client Name / Reference & Repository URL Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+                Client Name / Reference
+              </label>
+              <Input
+                value={clientRef}
+                onChange={(e) => setClientRef(e.target.value)}
+                placeholder="Client username or internal reference"
+                className="bg-[#FAF9F9] h-10 text-xs rounded-[6px]"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+                Repository URL
+              </label>
+              <Input
+                value={repoUrl}
+                onChange={(e) => setRepoUrl(e.target.value)}
+                placeholder="https://github.com/client/project"
+                className="bg-[#FAF9F9] h-10 text-xs rounded-[6px] font-mono"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Bug Description */}
+          <div>
+            <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+              Bug Description
+            </label>
+            <Textarea
+              value={bugDescription}
+              onChange={(e) => setBugDescription(e.target.value)}
+              placeholder="Deskripsikan gejala error, kode HTTP, atau kendala..."
+              className="min-h-[90px] leading-relaxed resize-y"
+              required
+            />
+          </div>
+
+          {/* Client Requirements / Expected Result */}
+          <div>
+            <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+              Client Requirements / Expected Result
+            </label>
+            <Textarea
+              value={expectedResult}
+              onChange={(e) => setExpectedResult(e.target.value)}
+              placeholder="Describe what the client expects..."
+              className="min-h-[80px] leading-relaxed resize-y"
+            />
+          </div>
+
+          {/* Attachments Upload Area */}
+          <div>
+            <label className="text-xs font-semibold text-[#1C1917] block mb-1.5">
+              Attachments
+            </label>
+            <div
+              onClick={handleSimulateUpload}
+              className="border-2 border-dashed border-[#E7E5E4] hover:border-[#881337]/50 rounded-[8px] bg-[#FAF9F9] hover:bg-rose-50/20 transition-all p-6 text-center cursor-pointer flex flex-col items-center justify-center space-y-1.5"
+            >
+              <div className="size-9 rounded-full bg-white border border-[#E7E5E4] flex items-center justify-center shadow-2xs">
+                <UploadCloud className="size-4 text-[#881337]" />
+              </div>
+              <span className="text-xs font-semibold text-[#1C1917]">
+                {selectedFile ? `File terpilih: ${selectedFile}` : "Upload screenshots, logs, or files"}
+              </span>
+              <span className="text-[11px] text-[#78716C]">
+                {selectedFile ? "Klik untuk mengganti file" : "Conceptual upload area (PNG, JPG, LOG, ZIP)"}
+              </span>
+            </div>
+          </div>
+
+          {/* Submit Action */}
+          <div className="pt-2">
+            <Button
+              type="submit"
+              variant="default"
+              className="w-full h-11 text-sm font-semibold rounded-[6px]"
+            >
+              Simpan Order & Siapkan Tagihan
+            </Button>
+            <p className="text-[11px] text-center text-[#78716C] mt-2">
+              Order tersimpan di daftar Client Orders dan siap di-attach ke agen AI di menu Jobs.
+            </p>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

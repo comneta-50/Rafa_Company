@@ -8,7 +8,7 @@ import {
   Eye,
   FileText,
   RotateCw,
-  Plus,
+  Link2,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -23,10 +23,37 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { AttachJobModal } from "@/components/jobs/attach-job-modal";
+import { mockAgents } from "@/components/layout/sidebar";
+
+const availableOrdersForAttach = [
+  {
+    id: "ORD-781",
+    clientName: "PT Fintek Nusantara",
+    title: "Fix Token Expiration & Race Condition in Auth Guard",
+    repoUrl: "client-fintek/auth-service",
+    feeAmount: "$450.00",
+  },
+  {
+    id: "ORD-780",
+    clientName: "Karya Studio Global",
+    title: "Optimize PostgreSQL connection pooling under heavy load",
+    repoUrl: "karya-studio/core-api",
+    feeAmount: "$200.00",
+  },
+  {
+    id: "ORD-779",
+    clientName: "Logistik Pintar ID",
+    title: "Hydration mismatch & buffer overflow pada batch consumer worker",
+    repoUrl: "logistik-id/tracking-worker",
+    feeAmount: "$350.00",
+  },
+];
 
 const initialJobs = [
   {
     id: "JOB-4092",
+    orderId: "ORD-781",
     repo: "comneta-50/site-ai-company",
     branch: "feat/auth-middleware",
     title: "Fix Token Expiration & Race Condition in Auth Guard",
@@ -44,6 +71,7 @@ const initialJobs = [
   },
   {
     id: "JOB-4089",
+    orderId: "ORD-780",
     repo: "comneta-50/core-api-service",
     branch: "main",
     title: "Optimize PostgreSQL connection pooling under heavy load",
@@ -61,6 +89,7 @@ const initialJobs = [
   },
   {
     id: "JOB-4085",
+    orderId: "ORD-779",
     repo: "comneta-50/web-frontend",
     branch: "fix/hydration-error",
     title: "Resolve SSR hydration mismatch on localized landing route",
@@ -77,6 +106,7 @@ const initialJobs = [
   },
   {
     id: "JOB-4081",
+    orderId: "ORD-775",
     repo: "comneta-50/analytics-worker",
     branch: "release/v1.2",
     title: "Patch Redis pipeline buffer overflow in batch consumer",
@@ -93,6 +123,7 @@ const initialJobs = [
   },
   {
     id: "JOB-4078",
+    orderId: "ORD-770",
     repo: "comneta-50/notification-service",
     branch: "fix/mailgun-webhook",
     title: "Replay failed webhook delivery events and patch signature verifier",
@@ -109,6 +140,7 @@ const initialJobs = [
   },
   {
     id: "JOB-4075",
+    orderId: "ORD-768",
     repo: "comneta-50/billing-service",
     branch: "hotfix/stripe-tax-calc",
     title: "Update tax calculation logic for EU customer transactions",
@@ -128,6 +160,7 @@ const initialJobs = [
 export default function JobsPage() {
   const [filter, setFilter] = useState("all");
   const [jobsList, setJobsList] = useState(initialJobs);
+  const [isAttachModalOpen, setIsAttachModalOpen] = useState(false);
   const [inspectJob, setInspectJob] = useState<(typeof initialJobs)[0] | null>(null);
   const [logModalJob, setLogModalJob] = useState<(typeof initialJobs)[0] | null>(null);
 
@@ -135,6 +168,31 @@ export default function JobsPage() {
     if (filter === "all") return true;
     return j.status === filter;
   });
+
+  const handleJobAttached = (orderId: string, agentName: string) => {
+    const orderData = availableOrdersForAttach.find((o) => o.id === orderId);
+    if (!orderData) return;
+
+    const newJob = {
+      id: `JOB-${Math.floor(4100 + Math.random() * 900)}`,
+      orderId,
+      repo: orderData.repoUrl,
+      branch: `ai-fix/${orderId.toLowerCase()}`,
+      title: orderData.title,
+      agent: agentName,
+      status: "fixing",
+      statusLabel: "Fixing",
+      time: "Just now",
+      progress: 20,
+      logs: [
+        `Ingested from Client Order: ${orderId}`,
+        `Assigned executor agent: ${agentName}`,
+        `Initializing isolated runner environment...`,
+      ],
+    };
+
+    setJobsList([newJob, ...jobsList]);
+  };
 
   const handleRetryJob = (jobId: string) => {
     setJobsList((prev) =>
@@ -150,7 +208,11 @@ export default function JobsPage() {
 
   return (
     <>
-      <Header />
+      {/* Tombol Header sekarang diubah ke "Attach Job" */}
+      <Header
+        actionLabel="Attach Job"
+        onAction={() => setIsAttachModalOpen(true)}
+      />
       <div className="max-w-[1440px] w-full mx-auto p-7 space-y-6">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E7E5E4] pb-6">
@@ -159,51 +221,63 @@ export default function JobsPage() {
               Jobs & Pipelines
             </h1>
             <p className="text-[13px] text-[#78716C] mt-1">
-              Active, queued, and historical automated jobs processed by AI agents.
+              Hubungkan order client ke agen AI autonomous dan pantau eksekusi antrean pipeline secara real-time.
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Button
-              variant={filter === "all" ? "default" : "outline"}
+              variant="default"
               size="sm"
-              onClick={() => {
-                setFilter("all");
-                toast.info("Menampilkan semua jobs");
-              }}
+              onClick={() => setIsAttachModalOpen(true)}
+              className="text-xs"
             >
-              All Jobs
-            </Button>
-            <Button
-              variant={filter === "fixing" ? "default" : "outline"}
-              size="sm"
-              onClick={() => {
-                setFilter("fixing");
-                toast.info("Filter: Status Fixing");
-              }}
-            >
-              Fixing
-            </Button>
-            <Button
-              variant={filter === "testing" ? "default" : "outline"}
-              size="sm"
-              onClick={() => {
-                setFilter("testing");
-                toast.info("Filter: Status Testing");
-              }}
-            >
-              Testing
-            </Button>
-            <Button
-              variant={filter === "completed" ? "default" : "outline"}
-              size="sm"
-              onClick={() => {
-                setFilter("completed");
-                toast.info("Filter: Status Completed");
-              }}
-            >
-              Completed
+              <Link2 className="size-3.5 mr-1" /> Attach Job ke AI
             </Button>
           </div>
+        </div>
+
+        {/* Filter Bar */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant={filter === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              setFilter("all");
+              toast.info("Menampilkan semua jobs");
+            }}
+          >
+            All Jobs
+          </Button>
+          <Button
+            variant={filter === "fixing" ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              setFilter("fixing");
+              toast.info("Filter: Status Fixing");
+            }}
+          >
+            Fixing
+          </Button>
+          <Button
+            variant={filter === "testing" ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              setFilter("testing");
+              toast.info("Filter: Status Testing");
+            }}
+          >
+            Testing
+          </Button>
+          <Button
+            variant={filter === "completed" ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              setFilter("completed");
+              toast.info("Filter: Status Completed");
+            }}
+          >
+            Completed
+          </Button>
         </div>
 
         {/* Jobs List */}
@@ -225,6 +299,11 @@ export default function JobsPage() {
                     <span className="font-mono text-xs font-semibold text-[#1C1917]">
                       {job.id}
                     </span>
+                    {job.orderId && (
+                      <span className="font-mono text-[11px] font-semibold text-[#881337] px-1.5 py-0.2 bg-[#FFE4E6] border border-[#FECDD3] rounded-[4px]">
+                        {job.orderId}
+                      </span>
+                    )}
                     <Badge
                       variant={
                         job.status === "fixing"
@@ -293,6 +372,15 @@ export default function JobsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal Attach Job (Pilih Order + Pilih AI) */}
+      <AttachJobModal
+        open={isAttachModalOpen}
+        onOpenChange={setIsAttachModalOpen}
+        orders={availableOrdersForAttach}
+        agents={mockAgents}
+        onAttached={handleJobAttached}
+      />
 
       {/* Modal Dialog Inspect Job */}
       <Dialog open={!!inspectJob} onOpenChange={(open) => !open && setInspectJob(null)}>
