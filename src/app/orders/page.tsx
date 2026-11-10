@@ -1,0 +1,636 @@
+"use client";
+
+import React, { useState } from "react";
+import {
+  ShoppingCart,
+  Plus,
+  GitBranch,
+  ShieldAlert,
+  ShieldCheck,
+  CheckCircle2,
+  Trash2,
+  Clock,
+  Download,
+  ExternalLink,
+  Bot,
+  FileCode,
+  ArrowRight,
+  Archive,
+  RefreshCw,
+  FolderGit2,
+  Lock,
+} from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+
+export interface LifecycleOrder {
+  id: string;
+  clientName: string;
+  clientEmail: string;
+  packageType: string;
+  bugDescription: string;
+  repoUrl: string;
+  branchName: string;
+  status:
+    | "order_created"
+    | "repo_connected"
+    | "ai_fixing"
+    | "client_review"
+    | "job_closed";
+  aiStage?: "Analyzer" | "Approval" | "Developer" | "QA" | "Ready";
+  retentionExpires: string;
+  prUrl?: string;
+  zipDownloaded?: boolean;
+  workspaceDestroyed?: boolean;
+}
+
+const initialOrders: LifecycleOrder[] = [
+  {
+    id: "ORD-781",
+    clientName: "PT Fintek Nusantara",
+    clientEmail: "tech@finteknusantara.id",
+    packageType: "Critical Bugfix (24h SLA)",
+    bugDescription: "Race condition saat refresh token user di middleware Next.js",
+    repoUrl: "client-fintek/auth-service",
+    branchName: "ai-fix/ord-781",
+    status: "client_review",
+    aiStage: "Ready",
+    retentionExpires: "23 Jam lagi",
+    prUrl: "https://github.com/client-fintek/auth-service/pull/42",
+    zipDownloaded: false,
+    workspaceDestroyed: false,
+  },
+  {
+    id: "ORD-780",
+    clientName: "Karya Studio Global",
+    clientEmail: "dev@karyastudio.com",
+    packageType: "Standard Patch",
+    bugDescription: "PostgreSQL connection pool exhaustion ketika webhook payload melonjak",
+    repoUrl: "karya-studio/core-api",
+    branchName: "ai-fix/ord-780",
+    status: "ai_fixing",
+    aiStage: "Developer",
+    retentionExpires: "3 Hari lagi",
+    workspaceDestroyed: false,
+  },
+  {
+    id: "ORD-779",
+    clientName: "Logistik Pintar ID",
+    clientEmail: "admin@logistikpintar.id",
+    packageType: "Security Hotfix",
+    bugDescription: "Hydration mismatch & buffer overflow pada batch consumer worker",
+    repoUrl: "logistik-id/tracking-worker",
+    branchName: "ai-fix/ord-779",
+    status: "order_created",
+    retentionExpires: "Belum aktif",
+    workspaceDestroyed: false,
+  },
+  {
+    id: "ORD-775",
+    clientName: "Eduka Platform",
+    clientEmail: "engineering@eduka.io",
+    packageType: "Standard Patch",
+    bugDescription: "Fix Stripe Webhook signature verification mismatch",
+    repoUrl: "eduka-org/billing-service",
+    branchName: "ai-fix/ord-775",
+    status: "job_closed",
+    aiStage: "Ready",
+    retentionExpires: "Akses Dicabut & Workspace Dihapus",
+    prUrl: "https://github.com/eduka-org/billing-service/pull/19",
+    zipDownloaded: true,
+    workspaceDestroyed: true,
+  },
+];
+
+export default function OrdersPage() {
+  const [orders, setOrders] = useState<LifecycleOrder[]>(initialOrders);
+  const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
+  const [activeOrderAction, setActiveOrderAction] = useState<LifecycleOrder | null>(null);
+
+  // Form New Order
+  const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [repoUrl, setRepoUrl] = useState("");
+  const [bugDescription, setBugDescription] = useState("");
+
+  const handleCreateOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!clientName.trim() || !repoUrl.trim() || !bugDescription.trim()) {
+      toast.error("Harap lengkapi nama client, repo target, dan deskripsi bug.");
+      return;
+    }
+    const newOrder: LifecycleOrder = {
+      id: `ORD-${Math.floor(700 + Math.random() * 200)}`,
+      clientName,
+      clientEmail: clientEmail || "client@company.com",
+      packageType: "Standard Bugfix",
+      bugDescription,
+      repoUrl,
+      branchName: `ai-fix/ord-${Math.floor(700 + Math.random() * 200)}`,
+      status: "order_created",
+      retentionExpires: "Menunggu koneksi repo",
+      workspaceDestroyed: false,
+    };
+    setOrders([newOrder, ...orders]);
+    toast.success(`Order ${newOrder.id} dari ${clientName} berhasil dibuat!`);
+    setIsNewOrderOpen(false);
+    setClientName("");
+    setClientEmail("");
+    setRepoUrl("");
+    setBugDescription("");
+  };
+
+  // 1. Hubungkan Repo Sementara & Spawn Isolated Workspace
+  const handleConnectTemporaryRepo = (orderId: string) => {
+    toast.loading("Mengotorisasi GitHub App sementara & meng-clone ke isolated workspace...", {
+      id: orderId,
+    });
+    setTimeout(() => {
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                status: "repo_connected",
+                retentionExpires: "7 Hari (Ephemeral)",
+              }
+            : o
+        )
+      );
+      toast.success(
+        "Repository dihubungkan sementara! Source code di-ingest ke isolated runner.",
+        { id: orderId }
+      );
+    }, 1200);
+  };
+
+  // 2. Jalankan AI Pipeline (Analyzer -> Approval -> Developer -> QA)
+  const handleStartAIFixing = (orderId: string) => {
+    toast.loading("Memulai AI Pipeline: Analyzer Agent mengaudit AST...", { id: orderId });
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === orderId
+          ? { ...o, status: "ai_fixing", aiStage: "Analyzer" }
+          : o
+      )
+    );
+
+    setTimeout(() => {
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                aiStage: "Developer",
+              }
+            : o
+        )
+      );
+      toast.info("Human Gate Disetujui. Developer Agent & QA Runner selesai memverifikasi patch.", {
+        id: orderId,
+      });
+
+      setTimeout(() => {
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderId
+              ? {
+                  ...o,
+                  status: "client_review",
+                  aiStage: "Ready",
+                  prUrl: `https://github.com/${o.repoUrl}/pull/${Math.floor(10 + Math.random() * 80)}`,
+                }
+              : o
+          )
+        );
+        toast.success("AI Bug fixing selesai! Pull Request & bundle ZIP siap diserahkan ke client.", {
+          id: orderId,
+        });
+      }, 1500);
+    }, 1800);
+  };
+
+  // 3. Download Bundle Patch ZIP
+  const handleDownloadPatchZip = (order: LifecycleOrder) => {
+    toast.success(`Bundle Patch ZIP (${order.id}-patch.zip) berhasil di-download!`);
+    setOrders((prev) =>
+      prev.map((o) => (o.id === order.id ? { ...o, zipDownloaded: true } : o))
+    );
+  };
+
+  // 4. Job Ditutup: Cabut Akses GitHub & Hancurkan Workspace
+  const handleCloseJobAndPurge = (orderId: string) => {
+    toast.loading("Mencabut akses token GitHub & membersihkan storage isolated workspace...", {
+      id: orderId,
+    });
+    setTimeout(() => {
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                status: "job_closed",
+                retentionExpires: "Akses Dicabut & Workspace Dihapus",
+                workspaceDestroyed: true,
+              }
+            : o
+        )
+      );
+      toast.success(
+        "Siklus Selesai: Akses repository telah dicabut & workspace dihapus permanen (Zero Retention).",
+        { id: orderId }
+      );
+      setActiveOrderAction(null);
+    }, 1500);
+  };
+
+  return (
+    <>
+      <Header actionLabel="Order Baru Client" onAction={() => setIsNewOrderOpen(true)} />
+      <div className="max-w-[1440px] w-full mx-auto p-7 space-y-6">
+        {/* Page Title & Explanation */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E7E5E4] pb-6">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-[#1C1917]">
+              Client Orders & Ephemeral Repo Lifecycle
+            </h1>
+            <p className="text-[13px] text-[#78716C] mt-1">
+              Alur kerja aman pay-per-bug: Repository dihubungkan sementara, diperbaiki AI di sandbox terisolasi, diserahkan, lalu akses dicabut otomatis.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="default" className="px-3 py-1">
+              <Lock className="size-3 mr-1 text-[#881337]" />
+              Zero-Retention Policy Active
+            </Badge>
+          </div>
+        </div>
+
+        {/* 5-Step Visual Lifecycle Stepper */}
+        <Card className="bg-gradient-to-r from-stone-50 via-white to-rose-50/40">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-xs font-semibold tracking-wider uppercase text-[#78716C]">
+              Arsitektur Siklus Hidup Repository Client
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3 text-xs">
+              <div className="p-3 bg-white border border-[#E7E5E4] rounded-[6px] shadow-2xs">
+                <span className="font-mono text-[10px] text-[#881337] font-semibold block mb-1">
+                  FASE 1
+                </span>
+                <span className="font-semibold text-[#1C1917] block">Client Order</span>
+                <span className="text-[11px] text-[#78716C] mt-0.5 block">
+                  Client mendaftar bug & menyetujui SLA tarif.
+                </span>
+              </div>
+
+              <div className="p-3 bg-white border border-[#E7E5E4] rounded-[6px] shadow-2xs">
+                <span className="font-mono text-[10px] text-[#881337] font-semibold block mb-1">
+                  FASE 2
+                </span>
+                <span className="font-semibold text-[#1C1917] block">Koneksi Sementara</span>
+                <span className="text-[11px] text-[#78716C] mt-0.5 block">
+                  GitHub App diotorisasi sementara ke isolated sandbox.
+                </span>
+              </div>
+
+              <div className="p-3 bg-white border border-[#E7E5E4] rounded-[6px] shadow-2xs">
+                <span className="font-mono text-[10px] text-[#881337] font-semibold block mb-1">
+                  FASE 3
+                </span>
+                <span className="font-semibold text-[#1C1917] block">AI Bug Fixing</span>
+                <span className="text-[11px] text-[#78716C] mt-0.5 block">
+                  Analyzer → Approval Gate → Developer → QA Tests.
+                </span>
+              </div>
+
+              <div className="p-3 bg-white border border-[#E7E5E4] rounded-[6px] shadow-2xs">
+                <span className="font-mono text-[10px] text-[#881337] font-semibold block mb-1">
+                  FASE 4
+                </span>
+                <span className="font-semibold text-[#1C1917] block">Serah Terima</span>
+                <span className="text-[11px] text-[#78716C] mt-0.5 block">
+                  PR siap di-merge client atau di-download sebagai ZIP patch.
+                </span>
+              </div>
+
+              <div className="p-3 bg-white border border-[#E7E5E4] rounded-[6px] shadow-2xs">
+                <span className="font-mono text-[10px] text-[#881337] font-semibold block mb-1">
+                  FASE 5
+                </span>
+                <span className="font-semibold text-[#1C1917] block">Job Closed & Purge</span>
+                <span className="text-[11px] text-[#78716C] mt-0.5 block">
+                  Akses dicabut & disk workspace dimusnahkan.
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Orders Listing Container */}
+        <div className="space-y-4">
+          {orders.map((order) => {
+            const isClosed = order.status === "job_closed";
+            const isReview = order.status === "client_review";
+            const isFixing = order.status === "ai_fixing";
+            const isConnected = order.status === "repo_connected";
+            const isCreated = order.status === "order_created";
+
+            return (
+              <Card
+                key={order.id}
+                className={`transition-all ${
+                  isClosed
+                    ? "opacity-75 bg-[#FAF9F9]"
+                    : "hover:border-[#D6D3D1] hover:shadow-2xs"
+                }`}
+              >
+                <CardHeader className="bg-[#FAF9F9] border-b border-[#E7E5E4] pb-3">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <span className="font-mono text-xs font-bold text-[#881337]">
+                          {order.id}
+                        </span>
+                        <span className="text-sm font-semibold text-[#1C1917]">
+                          {order.clientName}
+                        </span>
+                        <Badge
+                          variant={
+                            isClosed
+                              ? "secondary"
+                              : isReview
+                              ? "completed"
+                              : isFixing
+                              ? "fixing"
+                              : isConnected
+                              ? "testing"
+                              : "outline"
+                          }
+                          className="text-[10px]"
+                        >
+                          {isClosed
+                            ? "JOB DITUTUP (PURGED)"
+                            : isReview
+                            ? "MENUNGGU REVIEW CLIENT"
+                            : isFixing
+                            ? `AI FIXING (${order.aiStage})`
+                            : isConnected
+                            ? "REPO TERHUBUNG SEMENTARA"
+                            : "ORDER BARU"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-3 text-[11px] text-[#78716C] font-mono">
+                        <span className="flex items-center gap-1">
+                          <FolderGit2 className="size-3" /> {order.repoUrl}
+                        </span>
+                        <span>•</span>
+                        <span>{order.packageType}</span>
+                        <span>•</span>
+                        <span>{order.clientEmail}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[11px] font-mono text-[#78716C] flex items-center gap-1">
+                        <Clock className="size-3" /> Retensi: {order.retentionExpires}
+                      </span>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="p-5 space-y-4">
+                  <div>
+                    <span className="text-[11px] uppercase font-semibold text-[#78716C] tracking-wider block mb-1">
+                      Deskripsi Masalah / Bug Report:
+                    </span>
+                    <p className="text-xs text-[#1C1917] font-medium leading-relaxed bg-[#FAF9F9] p-3 rounded-[6px] border border-[#E7E5E4]">
+                      {order.bugDescription}
+                    </p>
+                  </div>
+
+                  {/* Flow Action Buttons */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-2 border-t border-[#E7E5E4]">
+                    <div className="text-xs text-[#78716C] flex items-center gap-2">
+                      {isClosed ? (
+                        <span className="text-stone-500 font-mono text-[11px] flex items-center gap-1">
+                          <CheckCircle2 className="size-3.5 text-stone-400" /> Akses GitHub telah dicabut. Zero source code tersisa.
+                        </span>
+                      ) : isReview ? (
+                        <span className="text-emerald-700 font-medium text-xs flex items-center gap-1">
+                          <CheckCircle2 className="size-3.5" /> Patch siap diserahkan melalui PR atau ZIP.
+                        </span>
+                      ) : (
+                        <span className="text-[#78716C] text-xs">
+                          Isolated Workspace: {order.branchName}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* Step 1: Hubungkan Repo */}
+                      {isCreated && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => handleConnectTemporaryRepo(order.id)}
+                        >
+                          <GitBranch className="size-3.5 mr-1" /> Hubungkan Repo Sementara
+                        </Button>
+                      )}
+
+                      {/* Step 2: Jalankan AI Pipeline */}
+                      {isConnected && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => handleStartAIFixing(order.id)}
+                        >
+                          <Bot className="size-3.5 mr-1" /> Jalankan AI Fixing (4 Stage)
+                        </Button>
+                      )}
+
+                      {/* Step 3: Hasil & Review Client */}
+                      {isReview && (
+                        <>
+                          {order.prUrl && (
+                            <a href={order.prUrl} target="_blank" rel="noopener noreferrer">
+                              <Button variant="outline" size="sm" className="text-xs">
+                                <ExternalLink className="size-3.5 mr-1" /> Buka Pull Request
+                              </Button>
+                            </a>
+                          )}
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => handleDownloadPatchZip(order)}
+                          >
+                            <Download className="size-3.5 mr-1" /> Unduh Patch ZIP
+                          </Button>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="text-xs bg-stone-900 text-white hover:bg-black"
+                            onClick={() => setActiveOrderAction(order)}
+                          >
+                            <Trash2 className="size-3.5 mr-1 text-rose-400" /> Tutup Job & Cabut Akses
+                          </Button>
+                        </>
+                      )}
+
+                      {/* Step 4: Closed */}
+                      {isClosed && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs opacity-60"
+                          disabled
+                        >
+                          <Archive className="size-3.5 mr-1" /> Arsip Selesai
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Modal Dialog Order Baru */}
+      <Dialog open={isNewOrderOpen} onOpenChange={setIsNewOrderOpen}>
+        <DialogContent className="max-w-md rounded-[8px] p-6 bg-white border border-[#E7E5E4]">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold text-[#1C1917]">
+              Input Order Baru Client
+            </DialogTitle>
+            <DialogDescription className="text-xs text-[#78716C]">
+              Masukkan detail client dan repositori yang akan diperbaiki sementara.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleCreateOrder} className="space-y-4 pt-2">
+            <div>
+              <label className="text-xs font-semibold text-[#1C1917] block mb-1">
+                Nama Client / Perusahaan
+              </label>
+              <Input
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                placeholder="Contoh: PT Alpha Fintech"
+                className="bg-[#FAF9F9] text-xs h-9 rounded-[6px]"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-[#1C1917] block mb-1">
+                Email Kontak Client
+              </label>
+              <Input
+                type="email"
+                value={clientEmail}
+                onChange={(e) => setClientEmail(e.target.value)}
+                placeholder="tech@alphafintech.com"
+                className="bg-[#FAF9F9] text-xs h-9 rounded-[6px]"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-[#1C1917] block mb-1">
+                Target GitHub Repository
+              </label>
+              <Input
+                value={repoUrl}
+                onChange={(e) => setRepoUrl(e.target.value)}
+                placeholder="alpha-fintech/backend-auth"
+                className="bg-[#FAF9F9] text-xs h-9 rounded-[6px]"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-[#1C1917] block mb-1">
+                Deskripsi Bug / Error
+              </label>
+              <Input
+                value={bugDescription}
+                onChange={(e) => setBugDescription(e.target.value)}
+                placeholder="Contoh: Error 500 saat refresh token timeout"
+                className="bg-[#FAF9F9] text-xs h-9 rounded-[6px]"
+              />
+            </div>
+
+            <DialogFooter className="pt-2 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsNewOrderOpen(false)}
+              >
+                Batal
+              </Button>
+              <Button type="submit" variant="default" size="sm">
+                Buat Order
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Konfirmasi Tutup Job & Purge Repository */}
+      <Dialog open={!!activeOrderAction} onOpenChange={(open) => !open && setActiveOrderAction(null)}>
+        {activeOrderAction && (
+          <DialogContent className="max-w-md rounded-[8px] p-6 bg-white border border-[#E7E5E4]">
+            <DialogHeader>
+              <div className="size-10 rounded-[6px] bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-700 mb-2">
+                <ShieldAlert className="size-5" />
+              </div>
+              <DialogTitle className="text-base font-semibold text-[#1C1917]">
+                Tutup Job & Cabut Akses Repositori?
+              </DialogTitle>
+              <DialogDescription className="text-xs text-[#78716C] leading-relaxed">
+                Tindakan ini akan:
+                <br />1. **Mencabut akses GitHub App / token** ke <span className="font-mono text-[#1C1917]">{activeOrderAction.repoUrl}</span>
+                <br />2. **Menghapus seluruh file** di isolated workspace runner
+                <br />3. **Menandai order selesai** sesuai kebijakan retensi zero-data.
+              </DialogDescription>
+            </DialogHeader>
+
+            <DialogFooter className="pt-3 flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveOrderAction(null)}
+              >
+                Batal
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleCloseJobAndPurge(activeOrderAction.id)}
+              >
+                Ya, Cabut Akses & Hapus Workspace
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        )}
+      </Dialog>
+    </>
+  );
+}
