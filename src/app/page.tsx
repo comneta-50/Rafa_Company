@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { workerApi } from "@/lib/api";
 import {
   Terminal,
   Bot,
@@ -84,26 +85,49 @@ export default function DashboardPage() {
   const [promptInput, setPromptInput] = useState("");
   const [jobs, setJobs] = useState(initialJobs);
   const [inspectJob, setInspectJob] = useState<(typeof initialJobs)[0] | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleRunAgentFix = () => {
+  useEffect(() => {
+    workerApi
+      .getJobs()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setJobs(data);
+        }
+      })
+      .catch((err) => console.warn("Failed to load jobs from worker:", err));
+  }, []);
+
+  const handleRunAgentFix = async () => {
     if (!promptInput.trim()) {
       toast.error("Silakan ketik instruksi tugas atau perbaikan bug.");
       return;
     }
-    const newJob = {
-      id: `JOB-${Math.floor(1000 + Math.random() * 9000)}`,
-      repo: "comneta-50/site-ai-company",
-      branch: "ai-auto-patch",
-      title: promptInput,
-      agent: "AutoFix Engineer",
-      status: "fixing",
-      statusLabel: "Fixing",
-      time: "Just now",
-      progress: "15%",
-    };
-    setJobs([newJob, ...jobs]);
-    toast.success(`Agent Fix berhasil dijalankan untuk: "${promptInput}"`);
-    setPromptInput("");
+
+    setIsSubmitting(true);
+    const toastId = toast.loading("Mengirim tugas ke Workers AI cluster...");
+
+    try {
+      // 1. Trigger backend job creation & Workers AI analysis
+      const res = await workerApi.createJob({
+        title: promptInput,
+        repo: "comneta-50/site-ai-company",
+        agent: "AutoFix Engineer",
+      });
+
+      if (res && res.job) {
+        setJobs((prev) => [res.job, ...prev]);
+        toast.success(`Agent Fix berhasil dijalankan: "${promptInput}"`, { id: toastId });
+      } else {
+        toast.success(`Agent Fix berhasil dijadwalkan!`, { id: toastId });
+      }
+
+      setPromptInput("");
+    } catch (err: any) {
+      toast.error(`Gagal menghubungkan ke backend: ${err.message}`, { id: toastId });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInspect = (job: (typeof initialJobs)[0]) => {
@@ -152,10 +176,11 @@ export default function DashboardPage() {
             <Button
               variant="default"
               size="sm"
+              disabled={isSubmitting}
               onClick={handleRunAgentFix}
               className="shrink-0"
             >
-              <Play className="size-3.5 mr-1 fill-white" /> Run Agent Fix
+              <Play className="size-3.5 mr-1 fill-white" /> {isSubmitting ? "Dispatching..." : "Run Agent Fix"}
             </Button>
           </CardContent>
         </Card>
