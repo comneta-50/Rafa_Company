@@ -55,24 +55,30 @@ export function AttachJobModal({
 
   const handleAttachSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedOrderId || !selectedAgentName) {
-      toast.error("Harap pilih Client Order dan AI Agent yang bertugas.");
+    // Jika user belum memilih secara eksplisit, gunakan opsi pertama jika tersedia
+    const effectiveOrderId = selectedOrderId || (orders.length > 0 ? orders[0].id : "");
+    const effectiveAgentName = selectedAgentName || (agents.length > 0 ? agents[0].name : "");
+
+    if (!effectiveOrderId || !effectiveAgentName) {
+      toast.error("Harap pastikan minimal satu Client Order dan AI Agent tersedia.");
       return;
     }
 
-    const orderObj = orders.find((o) => o.id === selectedOrderId);
+    const orderObj = orders.find((o) => o.id === effectiveOrderId);
     if (onAttached) {
-      onAttached(selectedOrderId, selectedAgentName);
+      onAttached(effectiveOrderId, effectiveAgentName);
     }
 
     toast.success(
-      `Order ${selectedOrderId} ("${orderObj?.title}") berhasil di-attach ke agent ${selectedAgentName}!`
+      `Order ${effectiveOrderId} ("${orderObj?.title || "Bug Fix"}") berhasil di-attach ke agent ${effectiveAgentName}!`
     );
+    setSelectedOrderId("");
+    setSelectedAgentName("");
     onOpenChange(false);
   };
 
-  const currentOrder = orders.find((o) => o.id === selectedOrderId);
-  const currentAgent = agents.find((a) => a.name === selectedAgentName);
+  const currentOrder = orders.find((o) => o.id === (selectedOrderId || (orders[0]?.id ?? "")));
+  const currentAgent = agents.find((a) => a.name === (selectedAgentName || (agents[0]?.name ?? "")));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -101,15 +107,19 @@ export function AttachJobModal({
             </label>
             <div className="relative">
               <select
-                value={selectedOrderId}
+                value={selectedOrderId || (orders.length > 0 ? orders[0].id : "")}
                 onChange={(e) => setSelectedOrderId(e.target.value)}
                 className="w-full h-10 px-3.5 pr-8 appearance-none rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] text-xs font-medium text-[#1C1917] focus:outline-none focus:ring-2 focus:ring-[#881337]/30"
               >
-                {orders.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    [{o.id}] {o.clientName} — {o.title} ({o.feeAmount || "Fee N/A"})
-                  </option>
-                ))}
+                {orders.length === 0 ? (
+                  <option value="">(Belum ada Client Order tersedia)</option>
+                ) : (
+                  orders.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      [{o.id}] {o.clientName} — {o.title} ({o.feeAmount || "Fee N/A"})
+                    </option>
+                  ))
+                )}
               </select>
               <ChevronDown className="size-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-[#78716C] pointer-events-none" />
             </div>
@@ -133,15 +143,19 @@ export function AttachJobModal({
             </label>
             <div className="relative">
               <select
-                value={selectedAgentName}
+                value={selectedAgentName || (agents.length > 0 ? agents[0].name : "")}
                 onChange={(e) => setSelectedAgentName(e.target.value)}
                 className="w-full h-10 px-3.5 pr-8 appearance-none rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4] text-xs font-medium text-[#1C1917] focus:outline-none focus:ring-2 focus:ring-[#881337]/30"
               >
-                {agents.map((a) => (
-                  <option key={a.name} value={a.name}>
-                    {a.name} ({a.role}) — Status: {a.status}
-                  </option>
-                ))}
+                {agents.length === 0 ? (
+                  <option value="">(Belum ada AI Agent tersedia)</option>
+                ) : (
+                  agents.map((a) => (
+                    <option key={a.name} value={a.name}>
+                      {a.name} ({a.role}) — Status: {a.status}
+                    </option>
+                  ))
+                )}
               </select>
               <ChevronDown className="size-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-[#78716C] pointer-events-none" />
             </div>
