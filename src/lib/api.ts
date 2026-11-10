@@ -135,10 +135,12 @@ export const workerApi = {
       latency: string;
       neurons?: {
         limit: number;
+        formattedLimit?: string;
         used: number;
+        formattedUsed?: string;
         remaining: number;
-        percentage: number;
         formattedRemaining: string;
+        percentage: number;
       };
     }>("/api/metrics"),
 

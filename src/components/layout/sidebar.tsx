@@ -52,9 +52,13 @@ export function Sidebar() {
     reviews: 0,
   });
   const [neuronsInfo, setNeuronsInfo] = useState<{
+    limit: string;
+    used: string;
     remaining: string;
     percentage: number;
   }>({
+    limit: "100.000",
+    used: "0",
     remaining: "100.000",
     percentage: 0,
   });
@@ -97,6 +101,8 @@ export function Sidebar() {
         });
         if (metricsData && metricsData.neurons) {
           setNeuronsInfo({
+            limit: metricsData.neurons.formattedLimit || "100.000",
+            used: metricsData.neurons.formattedUsed || "0",
             remaining: metricsData.neurons.formattedRemaining,
             percentage: metricsData.neurons.percentage,
           });
@@ -358,7 +364,9 @@ export function Sidebar() {
             {isLoading ? (
               <Skeleton className="h-4 w-14" />
             ) : (
-              <span className="text-[#881337] font-mono font-medium">{neuronsInfo.remaining}</span>
+              <span className="text-[#881337] font-mono font-medium text-[11px]">
+                {neuronsInfo.used} / {neuronsInfo.limit}
+              </span>
             )}
           </div>
           <div className="w-full bg-[#E7E5E4] rounded-full h-1.5 overflow-hidden">
@@ -367,10 +375,16 @@ export function Sidebar() {
             ) : (
               <div
                 className="bg-[#881337] h-full rounded-full transition-all duration-500"
-                style={{ width: `${Math.max(5, neuronsInfo.percentage)}%` }}
+                style={{ width: `${Math.max(neuronsInfo.percentage > 0 ? neuronsInfo.percentage : 2, 2)}%` }}
               />
             )}
           </div>
+          {!isLoading && (
+            <div className="flex justify-between items-center text-[10px] text-[#A8A29E] font-mono pt-0.5">
+              <span>{neuronsInfo.percentage}% used</span>
+              <span>{neuronsInfo.remaining} left</span>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between px-1.5">
