@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Settings,
   ChevronDown,
+  BarChart3,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -63,6 +64,7 @@ export const navCategories: NavCategory[] = [
     category: "Overview",
     items: [
       { id: "dashboard", label: "Dashboard", href: "/", icon: LayoutDashboard },
+      { id: "analytics", label: "Analytic", href: "/analytics", icon: BarChart3 },
       { id: "activity", label: "Activity Logs", href: "/activity", icon: Activity },
     ],
   },
