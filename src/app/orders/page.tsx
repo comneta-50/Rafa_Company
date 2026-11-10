@@ -59,67 +59,7 @@ export interface LifecycleOrder {
   workspaceDestroyed?: boolean;
 }
 
-const initialOrders: LifecycleOrder[] = [
-  {
-    id: "ORD-781",
-    clientName: "PT Fintek Nusantara",
-    clientEmail: "tech@finteknusantara.id",
-    packageType: "Critical Bugfix (24h SLA)",
-    feeAmount: "$450.00",
-    bugDescription: "Race condition saat refresh token user di middleware Next.js",
-    repoUrl: "client-fintek/auth-service",
-    branchName: "ai-fix/ord-781",
-    status: "client_review",
-    aiStage: "Ready",
-    retentionExpires: "23 Jam lagi",
-    prUrl: "https://github.com/client-fintek/auth-service/pull/42",
-    zipDownloaded: false,
-    workspaceDestroyed: false,
-  },
-  {
-    id: "ORD-780",
-    clientName: "Karya Studio Global",
-    clientEmail: "dev@karyastudio.com",
-    packageType: "Standard Patch",
-    feeAmount: "$200.00",
-    bugDescription: "PostgreSQL connection pool exhaustion ketika webhook payload melonjak",
-    repoUrl: "karya-studio/core-api",
-    branchName: "ai-fix/ord-780",
-    status: "ai_fixing",
-    aiStage: "Developer",
-    retentionExpires: "3 Hari lagi",
-    workspaceDestroyed: false,
-  },
-  {
-    id: "ORD-779",
-    clientName: "Logistik Pintar ID",
-    clientEmail: "admin@logistikpintar.id",
-    packageType: "Security Hotfix",
-    feeAmount: "$350.00",
-    bugDescription: "Hydration mismatch & buffer overflow pada batch consumer worker",
-    repoUrl: "logistik-id/tracking-worker",
-    branchName: "ai-fix/ord-779",
-    status: "order_created",
-    retentionExpires: "Belum aktif",
-    workspaceDestroyed: false,
-  },
-  {
-    id: "ORD-775",
-    clientName: "Eduka Platform",
-    clientEmail: "engineering@eduka.io",
-    packageType: "Standard Patch",
-    feeAmount: "$180.00",
-    bugDescription: "Fix Stripe Webhook signature verification mismatch",
-    repoUrl: "eduka-org/billing-service",
-    branchName: "ai-fix/ord-775",
-    status: "job_closed",
-    aiStage: "Ready",
-    retentionExpires: "Akses Dicabut & Workspace Dihapus",
-    prUrl: "https://github.com/eduka-org/billing-service/pull/19",
-    zipDownloaded: true,
-    workspaceDestroyed: true,
-  },
-];
+const initialOrders: LifecycleOrder[] = [];
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<LifecycleOrder[]>(initialOrders);
