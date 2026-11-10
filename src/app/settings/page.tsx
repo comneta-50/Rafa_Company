@@ -229,6 +229,12 @@ export default function SettingsPage() {
                     onChange={(e) => setLlmModel(e.target.value)}
                     className="w-full text-xs h-9 px-3 rounded-[6px] bg-[#FAF9F9] border border-[#E7E5E4]"
                   >
+                    <option value="@cf/zai-org/glm-4.7-flash">
+                      Cloudflare Workers AI: @cf/zai-org/glm-4.7-flash (Zhipu AI GLM)
+                    </option>
+                    <option value="@cf/zai-org/glm-5.3-flash">
+                      Cloudflare Workers AI: @cf/zai-org/glm-5.3-flash (GLM-5 MoE Flagship)
+                    </option>
                     <option value="@cf/meta/llama-3.2-3b-instruct">
                       Cloudflare Workers AI: @cf/meta/llama-3.2-3b-instruct (Ultra Fast)
                     </option>
